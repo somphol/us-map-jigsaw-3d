@@ -1,0 +1,60 @@
+{
+  "project": "us-map-jigsaw-3d",
+  "description": "An interactive 3D United States map & capitals jigsaw in one self-contained HTML file, built with Three.js.",
+  "build": {
+    "startedAt": "2026-10-31T18:24:10.762000Z",
+    "completedAt": "2026-10-31T18:54:34.648541Z",
+    "durationSeconds": 1823.9,
+    "durationHuman": "30m 24s",
+    "timezone": "UTC"
+  },
+  "tokens": {
+    "input": 415042,
+    "output": 79895,
+    "reasoning": 94812,
+    "cacheRead": 17169920,
+    "cacheWrite": 1172,
+    "total": 589749,
+    "totalWithCache": 17760841,
+    "note": "Snapshot from the OpenCode session record when the project was packaged. total = input + output + reasoning. Cache reads/writes are reported separately because they are a subset of context usage."
+  },
+  "cost": {
+    "usd": 0.0,
+    "note": "As reported by the OpenCode session record."
+  },
+  "sessionId": "ses_e6ccb8c03ffepuWoju93Bqua9y",
+  "model": {
+    "name": "DeepSeek V4.1 Flash",
+    "providerID": "opencode-go",
+    "modelID": "deepseek-v4.1-flash"
+  },
+  "harness": {
+    "name": "OpenCode",
+    "version": "2.2.5"
+  },
+  "repository": "https://github.com/somphol/us-map-jigsaw-3d",
+  "pages": "https://somphol.github.io/us-map-jigsaw-3d/",
+  "game": {
+    "playableStates": 30,
+    "playableCapitals": 30,
+    "contiguousOutlines": 48,
+    "singleFile": "index.html",
+    "htmlBytes": 133978,
+    "htmlLines": 3143
+  },
+  "artifacts": [
+    "index.html",
+    "README.md",
+    "STATE.md",
+    "state.json",
+    "screenshot.png",
+    "screenshot-menu.png",
+    "screenshot-victory.png",
+    "assets/mapdata.js",
+    "tools/generate_map_data.py",
+    "tools/build.py",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "credits": "Built with OpenCode and DeepSeek V4.1 Flash. State boundaries from PublicaMundi/Census; Three.js by mrdoob and contributors."
+}
