@@ -401,6 +401,53 @@
   }
   .fact-close:hover { color: var(--ink); background: rgba(255,255,255,.06); }
 
+  /* ------------------------------- State dossier --------------------------- */
+  .state-info {
+    position: fixed; z-index: 35;
+    top: 108px; left: 22px;
+    width: 322px;
+    padding: 18px;
+    border: 1px solid rgba(226, 190, 133, 0.34);
+    border-radius: 16px;
+    background:
+      radial-gradient(circle at 8% 4%, rgba(217, 173, 104, 0.16), transparent 40%),
+      linear-gradient(150deg, rgba(54, 37, 24, 0.94), rgba(22, 15, 11, 0.96));
+    box-shadow: 0 26px 70px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 239, 209, 0.10);
+    backdrop-filter: blur(18px) saturate(112%);
+    -webkit-backdrop-filter: blur(18px) saturate(112%);
+    transform: translateX(calc(-100% - 40px)) rotate(-1.2deg);
+    opacity: 0;
+    transition: transform .48s cubic-bezier(.16,.9,.3,1), opacity .38s ease;
+    pointer-events: none;
+  }
+  .state-info.on { transform: translateX(0) rotate(0); opacity: 1; pointer-events: auto; }
+  .state-info-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .state-info-name { margin-top: 5px; font-family: var(--serif); font-size: 27px; line-height: 1; letter-spacing: -0.01em; }
+  .state-info-sub { margin-top: 5px; color: var(--muted); font-size: 9px; line-height: 1.45; letter-spacing: .02em; }
+  .state-info-sub b { color: var(--gold-bright); font-weight: 600; }
+  .info-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; }
+  .info-stat { padding: 10px 8px 9px; border: 1px solid rgba(226, 190, 133, 0.12); border-radius: 9px; background: rgba(255, 246, 228, 0.026); }
+  .info-stat small { display: block; color: var(--muted); font-size: 6.5px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; white-space: nowrap; }
+  .info-stat strong { display: block; margin-top: 5px; font-family: var(--serif); font-size: 15px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .info-stat span { display: block; margin-top: 3px; color: var(--muted); font-size: 7px; letter-spacing: .02em; }
+  .info-neighbors { margin-top: 15px; }
+  .info-neighbors > small { color: var(--muted); font-size: 7.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+  .info-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .info-chip {
+    padding: 5px 8px;
+    border: 1px solid rgba(217, 173, 104, 0.24);
+    border-radius: 999px;
+    background: rgba(255, 246, 228, 0.035);
+    color: var(--ink-dim);
+    font-size: 8.5px; font-weight: 600; letter-spacing: .02em;
+    cursor: pointer;
+    transition: border-color .18s, color .18s, background .18s;
+  }
+  .info-chip:hover { border-color: rgba(243, 207, 143, 0.62); color: var(--ink); background: rgba(217, 173, 104, 0.10); }
+  .info-empty { color: var(--muted); font-size: 9px; line-height: 1.5; }
+  .info-foot { margin-top: 14px; padding-top: 11px; border-top: 1px solid rgba(226, 190, 133, 0.14); color: var(--muted); font-size: 8px; line-height: 1.5; letter-spacing: .02em; }
+  .info-foot b { color: var(--gold-bright); font-weight: 600; }
+
   /* -------------------------------- Overlays ------------------------------- */
   .modal-backdrop {
     position: fixed; inset: 0; z-index: 100;
@@ -593,6 +640,12 @@
     .brand-sub { display: none; }
     .stats { display: none; }
     .fact-card { top: auto; right: 14px; bottom: 78px; width: min(318px, calc(100vw - 28px)); }
+    .state-info {
+      top: 82px; left: 10px; right: 10px; width: auto;
+      max-height: 47vh; overflow-y: auto;
+      transform: translateY(-10px) rotate(-.4deg);
+    }
+    .state-info.on { transform: translateY(0) rotate(0); }
     .view-tools { left: 10px; bottom: 56px; display: flex; flex-wrap: wrap; max-width: calc(100vw - 20px); }
     .view-tools .btn { height: 27px; font-size: 8px; padding: 0 7px; }
     .side-note { display: none; }
@@ -727,6 +780,29 @@
   <div class="fact-foot"><span class="check">✓</span><span id="factFoot">State and capital correctly paired.</span></div>
 </aside>
 
+<aside class="state-info" id="stateInfo" aria-live="polite">
+  <button class="fact-close" id="stateInfoClose" type="button" aria-label="Close state dossier">×</button>
+  <div class="fact-eyebrow">State dossier</div>
+  <div class="state-info-head">
+    <div>
+      <div class="state-info-name" id="infoName">Alaska</div>
+      <div class="state-info-sub" id="infoSub">Capital <b>Juneau</b> · 49th state admitted</div>
+    </div>
+    <div class="fact-seal" id="infoSeal">AK</div>
+  </div>
+  <div class="fact-rule"></div>
+  <div class="info-stats">
+    <div class="info-stat"><small>Total area</small><strong id="infoArea">665,384</strong><span>sq mi</span></div>
+    <div class="info-stat"><small>Population</small><strong id="infoPopulation">733,406</strong><span>2023 estimate</span></div>
+    <div class="info-stat"><small>Density</small><strong id="infoDensity">1.1</strong><span>/ sq mi</span></div>
+  </div>
+  <div class="info-neighbors">
+    <small>Neighboring states</small>
+    <div class="info-chips" id="infoNeighbors"></div>
+  </div>
+  <div class="info-foot" id="infoFoot">Click any <b>placed state</b> on the map — or a neighboring chip — to inspect it.</div>
+</aside>
+
 <div class="modal-backdrop" id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
   <div class="modal">
     <div class="modal-hero">
@@ -756,6 +832,10 @@
         <div class="step">
           <div class="step-num">III</div>
           <div><b>Crown the capitals</b><p>Drag a brass capital pin to the glowing socket of a placed state. A wrong pairing is rejected with a buzz.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num">IV</div>
+          <div><b>Inspect any placed state</b><p>Click a state on the map for total area, population, density and neighboring states. Alaska &amp; Hawaii are on the Pacific inset.</p></div>
         </div>
       </div>
       <div class="key-legend" aria-label="Controls">
@@ -803,7 +883,7 @@
 <script>
 /* MAP_DATA_START */
 // Generated by tools/generate_map_data.py — public-domain US Census boundaries
-window.US_MAP_DATA = {"width":32.0,"height":19.85,"states":[{"id":"AL","name":"Alabama","capital":"Montgomery","population":5108468,"order":22,"color":"#c78366","center":[6.27,4.3],"capitalPt":[6.64,4.6],"polys":[[[5.77,2.63],[6.87,2.53],[7.56,4.58],[7.44,4.93],[7.6,5.56],[5.89,5.74],[6.08,6.17],[5.91,6.33],[5.64,6.01],[5.58,6.3],[5.41,6.27],[5.26,5.1],[5.24,2.68]]],"inset":null},{"id":"AK","name":"Alaska","capital":"Juneau","population":733406,"order":49,"color":"#74d0aa","center":[25.51,14.1],"capitalPt":[27.48,15.6],"polys":[[[26.04,12.72],[26.77,12.86],[26.77,15.14],[26.97,15.12],[27.15,15.48],[27.35,15.26],[27.74,16.04],[27.93,16.16],[27.9,16.45],[27.71,16.28],[27.69,16.02],[27.38,15.41],[27.4,15.65],[27.21,15.46],[27.24,15.65],[26.9,15.33],[26.92,15.2],[26.84,15.28],[26.25,15.08],[26.17,15.15],[26.15,14.96],[26.0,14.97],[26.02,15.21],[25.64,15.41],[25.66,15.04],[25.83,14.96],[25.74,14.9],[25.37,15.36],[25.45,15.49],[25.37,15.65],[24.9,16.19],[24.57,16.28],[24.22,16.57],[24.55,16.21],[24.71,16.24],[25.05,15.53],[24.89,15.47],[24.86,15.6],[24.71,15.44],[24.55,15.56],[24.5,15.19],[24.3,15.24],[24.09,14.85],[24.27,14.43],[24.42,14.47],[24.66,14.28],[24.62,14.01],[24.44,14.16],[24.21,14.13],[23.88,13.85],[24.27,13.61],[24.34,13.74],[24.62,13.67],[24.47,13.57],[24.57,13.64],[24.56,13.51],[24.34,13.48],[24.03,13.18],[24.08,13.05],[24.32,13.03],[24.54,12.7],[25.11,12.45],[25.17,12.58],[25.27,12.5]]],"inset":"alaska"},{"id":"AZ","name":"Arizona","capital":"Phoenix","population":7431344,"order":48,"color":"#cf82d9","center":[-9.54,2.61],"capitalPt":[-9.91,3.21],"polys":[[[-7.61,0.77],[-8.21,5.14],[-9.53,4.94],[-11.78,3.62],[-11.51,3.4],[-11.59,2.94],[-11.39,2.56],[-11.08,2.32],[-11.3,1.83],[-11.18,0.87],[-10.84,1.0],[-10.63,0.27]]],"inset":null},{"id":"AR","name":"Arkansas","capital":"Little Rock","population":3067732,"order":25,"color":"#bdd25b","center":[2.58,2.92],"capitalPt":[2.69,3.03],"polys":[[[1.29,1.69],[3.95,1.6],[3.83,1.99],[4.23,1.97],[4.22,2.11],[3.55,3.46],[3.46,4.35],[1.61,4.41],[1.6,3.99],[1.32,3.93]]],"inset":null},{"id":"CA","name":"California","capital":"Sacramento","population":38965193,"order":31,"color":"#77a5cd","center":[-13.83,-0.6],"capitalPt":[-14.74,-1.96],"polys":[[[-14.98,-4.81],[-13.21,-4.31],[-13.79,-2.04],[-11.28,1.73],[-11.08,2.32],[-11.59,2.94],[-11.56,3.46],[-13.24,3.28],[-13.32,2.65],[-13.83,2.18],[-13.87,1.92],[-15.05,1.19],[-14.93,0.8],[-15.45,-0.32],[-15.28,-0.67],[-15.56,-1.1],[-15.35,-1.78],[-15.46,-1.63],[-15.69,-1.78],[-15.94,-2.61],[-15.81,-3.28],[-16.0,-3.69],[-15.57,-4.52],[-15.52,-4.96]]],"inset":null},{"id":"CO","name":"Colorado","capital":"Denver","population":5877610,"order":38,"color":"#d68598","center":[-5.32,-0.55],"capitalPt":[-4.94,-1.08],"polys":[[[-6.53,-2.25],[-3.15,-1.93],[-3.35,1.2],[-7.61,0.77],[-7.18,-2.33]]],"inset":null},{"id":"CT","name":"Connecticut","capital":"Hartford","population":3617176,"order":5,"color":"#5fce65","center":[13.55,-3.9],"capitalPt":[13.57,-4.04],"polys":[[[13.31,-4.19],[14.01,-4.36],[14.13,-3.9],[13.17,-3.31],[13.07,-4.14]]],"inset":null},{"id":"DE","name":"Delaware","capital":"Dover","population":1031890,"order":1,"color":"#916dd7","center":[12.45,-1.55],"capitalPt":[12.42,-1.68],"polys":[[[12.37,-2.18],[12.33,-1.9],[12.82,-1.2],[12.44,-1.13],[12.17,-2.08]]],"inset":null},{"id":"FL","name":"Florida","capital":"Tallahassee","population":22610726,"order":27,"color":"#d3b788","center":[9.51,7.13],"capitalPt":[8.13,5.94],"polys":[[[7.28,5.61],[7.6,5.56],[7.72,5.78],[9.47,5.66],[9.53,5.82],[9.62,5.43],[9.97,5.48],[11.4,8.3],[11.45,9.12],[11.28,9.57],[10.88,9.69],[10.61,9.19],[10.37,9.21],[10.0,8.46],[9.88,8.57],[9.5,8.1],[9.66,7.77],[9.45,7.91],[9.34,7.77],[9.38,6.99],[8.61,6.31],[8.33,6.18],[7.51,6.59],[6.8,6.15],[6.0,6.29],[5.89,5.74]]],"inset":null},{"id":"GA","name":"Georgia","capital":"Atlanta","population":11029227,"order":4,"color":"#63cac3","center":[8.5,4.18],"capitalPt":[7.74,3.4],"polys":[[[8.42,2.32],[8.31,2.59],[9.66,3.71],[10.17,4.4],[9.97,5.48],[9.62,5.43],[9.61,5.8],[9.47,5.66],[7.72,5.78],[7.5,5.36],[7.56,4.58],[6.87,2.53]]],"inset":null},{"id":"HI","name":"Hawaii","capital":"Honolulu","population":1435138,"order":50,"color":"#d371be","center":[25.92,20.31],"capitalPt":[24.39,19.15],"polys":[[[25.84,20.75],[25.68,20.69],[25.68,20.48],[25.57,20.22],[25.72,20.02],[25.69,19.86],[26.06,20.03],[26.36,20.36],[26.25,20.48],[25.91,20.63]],[[25.24,19.35],[25.31,19.45],[25.4,19.41],[25.61,19.51],[25.58,19.61],[25.33,19.64],[25.32,19.52],[25.17,19.43]],[[23.43,18.55],[23.54,18.63],[23.52,18.73],[23.44,18.79],[23.24,18.71],[23.27,18.6]],[[24.38,18.91],[24.45,19.06],[24.42,19.16],[24.28,19.17],[24.19,18.98]]],"inset":"hawaii"},{"id":"ID","name":"Idaho","capital":"Boise","population":1964726,"order":43,"color":"#acdc7f","center":[-9.84,-5.43],"capitalPt":[-10.83,-5.04],"polys":[[[-9.88,-9.08],[-10.04,-8.32],[-9.96,-7.86],[-9.36,-7.13],[-9.63,-6.33],[-9.24,-6.29],[-8.91,-5.28],[-8.2,-5.27],[-8.05,-5.41],[-7.9,-5.17],[-8.2,-3.27],[-11.56,-3.91],[-11.12,-5.53],[-11.26,-5.75],[-10.64,-6.59],[-10.83,-7.2],[-10.37,-9.19]]],"inset":null},{"id":"IL","name":"Illinois","capital":"Springfield","population":12549689,"order":21,"color":"#6679c7","center":[4.34,-1.21],"capitalPt":[4.08,-0.98],"polys":[[[3.38,-3.07],[4.99,-3.17],[5.2,-2.58],[5.42,-0.3],[5.18,0.11],[5.16,0.73],[4.92,0.83],[4.9,1.08],[4.6,0.99],[4.45,1.17],[4.27,0.64],[3.74,0.26],[3.86,-0.24],[3.58,-0.24],[3.08,-0.88],[2.98,-1.28],[3.27,-1.83],[3.2,-2.21],[3.68,-2.54],[3.67,-2.79]]],"inset":null},{"id":"IN","name":"Indiana","capital":"Indianapolis","population":6862199,"order":19,"color":"#d07c74","center":[6.06,-1.26],"capitalPt":[6.13,-1.15],"polys":[[[6.07,-2.7],[6.74,-2.78],[7.01,-0.47],[6.65,-0.39],[6.35,0.25],[6.18,0.1],[5.71,0.45],[5.41,0.33],[5.17,0.49],[5.42,-0.3],[5.2,-2.58]]],"inset":null},{"id":"IA","name":"Iowa","capital":"Des Moines","population":3207004,"order":29,"color":"#82d9a3","center":[1.75,-2.68],"capitalPt":[1.71,-2.28],"polys":[[[2.93,-3.82],[3.12,-3.64],[3.13,-3.25],[3.69,-2.69],[3.59,-2.37],[3.2,-2.21],[3.27,-1.83],[3.02,-1.39],[2.83,-1.57],[0.48,-1.49],[-0.01,-3.14],[0.02,-3.74]]],"inset":null},{"id":"KS","name":"Kansas","capital":"Topeka","population":2940546,"order":34,"color":"#ab5bd2","center":[-1.06,0.11],"capitalPt":[0.54,-0.29],"polys":[[[-3.12,-1.14],[0.75,-1.03],[1.0,-0.9],[0.87,-0.67],[1.17,-0.38],[1.19,1.31],[-3.35,1.2]]],"inset":null},{"id":"KY","name":"Kentucky","capital":"Frankfort","population":4526154,"order":15,"color":"#cdca77","center":[6.83,0.54],"capitalPt":[7.03,-0.02],"polys":[[[7.55,-0.53],[8.15,-0.6],[8.48,0.01],[8.84,0.27],[8.22,0.98],[7.9,1.15],[4.4,1.57],[4.6,0.99],[4.9,1.08],[5.22,0.41],[5.71,0.45],[6.18,0.1],[6.35,0.25],[6.65,-0.39],[7.01,-0.47],[6.98,-0.72]]],"inset":null},{"id":"LA","name":"Louisiana","capital":"Baton Rouge","population":4573749,"order":18,"color":"#85c1d6","center":[3.0,5.88],"capitalPt":[3.55,6.33],"polys":[[[1.89,4.4],[3.46,4.35],[3.61,4.95],[3.3,5.42],[3.23,5.92],[4.48,5.85],[4.43,6.11],[4.67,6.47],[4.47,6.67],[4.84,6.7],[4.59,7.0],[5.07,7.22],[4.98,7.36],[4.49,7.03],[4.33,7.29],[4.02,7.21],[3.87,7.37],[3.1,6.83],[2.83,7.07],[2.21,6.91],[1.8,6.99],[1.98,6.01],[1.63,5.2],[1.61,4.41]]],"inset":null},{"id":"ME","name":"Maine","capital":"Augusta","population":1395722,"order":23,"color":"#ce5f91","center":[14.69,-7.22],"capitalPt":[14.63,-6.37],"polys":[[[14.4,-5.29],[14.2,-5.47],[13.74,-6.92],[14.02,-7.34],[14.02,-8.11],[14.25,-8.79],[14.48,-8.63],[14.78,-8.86],[15.06,-8.72],[15.37,-7.69],[15.57,-7.69],[15.62,-7.45],[16.0,-7.18],[15.55,-6.65],[15.42,-6.74],[15.38,-6.54],[15.03,-6.58],[15.07,-6.28],[14.73,-5.92],[14.6,-5.99]]],"inset":null},{"id":"MD","name":"Maryland","capital":"Annapolis","population":6180253,"order":7,"color":"#7ed76d","center":[11.72,-1.44],"capitalPt":[11.88,-1.42],"polys":[[[10.04,-1.66],[12.17,-2.08],[12.44,-1.13],[12.82,-1.2],[12.77,-0.85],[12.41,-0.68],[12.39,-0.91],[12.13,-0.95],[11.98,-1.58],[12.09,-1.93],[11.88,-1.25],[12.11,-0.73],[11.56,-0.86],[11.65,-1.31],[11.31,-1.38],[11.01,-1.74],[10.47,-1.63],[10.1,-1.26]]],"inset":null},{"id":"MA","name":"Massachusetts","capital":"Boston","population":7001399,"order":6,"color":"#9288d3","center":[13.94,-4.52],"capitalPt":[14.35,-4.72],"polys":[[[14.32,-5.14],[14.4,-4.66],[15.07,-4.36],[14.49,-4.06],[14.24,-4.41],[13.07,-4.14],[13.06,-4.7],[14.15,-4.94]]],"inset":null},{"id":"MI","name":"Michigan","capital":"Lansing","population":10037261,"order":26,"color":"#ca8f63","center":[6.67,-4.09],"capitalPt":[6.8,-3.55],"polys":[[[7.52,-2.86],[5.6,-2.66],[5.87,-3.43],[5.62,-4.09],[5.69,-4.95],[6.0,-5.33],[6.08,-5.04],[6.31,-5.85],[7.24,-5.49],[7.31,-4.87],[7.07,-4.32],[7.21,-4.27],[7.57,-4.7],[7.74,-4.55],[7.95,-3.61],[7.79,-3.62]],[[4.93,-5.2],[4.6,-5.81],[3.33,-6.22],[4.46,-6.99],[4.58,-6.94],[4.36,-6.46],[4.64,-6.58],[4.94,-6.32],[5.31,-6.28],[6.15,-6.62],[6.2,-6.4],[6.67,-6.5],[6.79,-6.13],[7.07,-6.13],[6.43,-6.1],[6.43,-5.94],[5.98,-6.08],[5.39,-5.71],[5.31,-5.83]]],"inset":null},{"id":"MN","name":"Minnesota","capital":"Saint Paul","population":5737915,"order":32,"color":"#71d3b8","center":[1.26,-5.92],"capitalPt":[1.94,-4.91],"polys":[[[2.47,-6.28],[2.32,-6.25],[2.34,-5.79],[2.04,-5.51],[2.17,-5.29],[2.1,-4.76],[2.88,-4.2],[3.02,-3.83],[0.1,-3.76],[0.1,-5.15],[-0.12,-5.39],[0.03,-5.95],[-0.28,-8.0],[0.78,-8.0],[0.88,-8.29],[1.02,-7.83],[1.49,-7.64],[1.91,-7.74],[2.66,-7.32],[3.03,-7.49],[3.68,-7.35],[3.11,-7.02]]],"inset":null},{"id":"MS","name":"Mississippi","capital":"Jackson","population":2939690,"order":20,"color":"#dc7fda","center":[4.44,4.51],"capitalPt":[4.13,4.86],"polys":[[[5.07,2.69],[5.31,2.75],[5.26,5.1],[5.41,6.27],[4.67,6.47],[4.43,6.11],[4.48,5.85],[3.23,5.92],[3.3,5.42],[3.61,4.95],[3.4,3.92],[3.92,2.77]]],"inset":null},{"id":"MO","name":"Missouri","capital":"Jefferson City","population":6196156,"order":24,"color":"#a9c766","center":[2.48,0.21],"capitalPt":[2.64,0.04],"polys":[[[2.77,-1.56],[3.02,-1.39],[3.08,-0.88],[3.53,-0.28],[3.86,-0.24],[3.74,0.26],[4.27,0.64],[4.3,0.96],[4.55,1.17],[4.23,1.97],[3.83,1.99],[3.95,1.6],[1.2,1.7],[1.17,-0.38],[0.87,-0.67],[1.0,-0.9],[0.48,-1.49]]],"inset":null},{"id":"MT","name":"Montana","capital":"Helena","population":1132812,"order":41,"color":"#7499d0","center":[-6.85,-7.06],"capitalPt":[-8.17,-6.87],"polys":[[[-3.78,-8.17],[-4.04,-5.1],[-7.84,-5.57],[-7.9,-5.17],[-8.05,-5.41],[-8.32,-5.26],[-8.97,-5.33],[-9.24,-6.29],[-9.63,-6.33],[-9.36,-7.13],[-9.96,-7.86],[-10.04,-8.32],[-9.88,-9.08]]],"inset":null},{"id":"NE","name":"Nebraska","capital":"Lincoln","population":1978379,"order":37,"color":"#d9828c","center":[-1.84,-2.29],"capitalPt":[-0.06,-1.67],"polys":[[[-3.77,-3.53],[-1.06,-3.38],[-0.04,-3.1],[0.27,-2.57],[0.42,-1.59],[0.75,-1.03],[-3.2,-1.14],[-3.15,-1.93],[-4.31,-2.01],[-4.18,-3.56]]],"inset":null},{"id":"NV","name":"Nevada","capital":"Carson City","population":3194176,"order":36,"color":"#5bd270","center":[-11.79,-1.83],"capitalPt":[-13.62,-2.13],"polys":[[[-11.56,-3.91],[-9.89,-3.56],[-10.75,0.88],[-10.84,1.0],[-11.18,0.87],[-11.28,1.73],[-13.79,-2.04],[-13.21,-4.31]]],"inset":null},{"id":"NH","name":"New Hampshire","capital":"Concord","population":1402054,"order":9,"color":"#9f77cd","center":[13.81,-5.64],"capitalPt":[13.92,-5.29],"polys":[[[13.74,-6.92],[14.2,-5.47],[14.4,-5.29],[14.15,-4.94],[13.51,-4.8],[13.43,-6.05],[13.65,-6.32],[13.6,-6.86]]],"inset":null},{"id":"NJ","name":"New Jersey","capital":"Trenton","population":9290841,"order":3,"color":"#d6c385","center":[12.74,-2.58],"capitalPt":[12.69,-2.59],"polys":[[[12.81,-3.35],[13.03,-3.29],[12.91,-2.85],[13.08,-2.83],[13.14,-2.32],[12.87,-1.65],[12.32,-2.03],[12.67,-2.58],[12.37,-2.8],[12.34,-3.11],[12.52,-3.46]]],"inset":null},{"id":"NM","name":"New Mexico","capital":"Santa Fe","population":2114371,"order":47,"color":"#5fc8ce","center":[-6.04,2.98],"capitalPt":[-5.83,2.01],"polys":[[[-6.62,0.89],[-3.93,1.15],[-4.26,5.04],[-6.57,4.82],[-6.53,5.0],[-7.62,4.86],[-7.67,5.21],[-8.21,5.14],[-7.61,0.77]]],"inset":null},{"id":"NY","name":"New York","capital":"Albany","population":19571216,"order":11,"color":"#d76db2","center":[11.81,-4.56],"capitalPt":[12.81,-4.56],"polys":[[[12.6,-6.4],[13.06,-4.7],[13.23,-3.51],[13.11,-3.39],[13.42,-3.31],[13.91,-3.63],[14.04,-3.54],[13.09,-2.94],[13.03,-3.29],[12.39,-3.49],[12.04,-3.86],[9.57,-3.38],[9.53,-3.59],[9.97,-4.07],[9.78,-4.41],[11.08,-4.73],[11.3,-4.92],[11.15,-5.42],[11.6,-6.04]]],"inset":null},{"id":"NC","name":"North Carolina","capital":"Raleigh","population":10835491,"order":12,"color":"#a3d388","center":[10.71,1.53],"capitalPt":[11.08,1.28],"polys":[[[9.55,0.93],[12.65,0.36],[12.78,0.65],[12.26,0.93],[12.8,0.81],[12.88,0.99],[12.47,1.38],[12.66,1.64],[12.57,1.88],[12.14,2.01],[11.78,2.69],[11.42,2.75],[10.58,2.15],[9.88,2.25],[9.69,2.02],[7.67,2.43],[7.95,1.95],[8.96,1.37],[9.12,0.97]]],"inset":null},{"id":"ND","name":"North Dakota","capital":"Bismarck","population":783926,"order":39,"color":"#636aca","center":[-2.0,-6.88],"capitalPt":[-2.19,-6.38],"polys":[[[-0.28,-8.0],[0.05,-5.64],[-3.98,-5.83],[-3.78,-8.17]]],"inset":null},{"id":"OH","name":"Ohio","capital":"Columbus","population":11785935,"order":17,"color":"#d38671","center":[8.02,-1.79],"capitalPt":[7.96,-1.52],"polys":[[[9.15,-3.29],[9.25,-1.52],[8.81,-1.1],[8.73,-0.77],[8.63,-0.88],[8.52,-0.41],[8.15,-0.6],[7.7,-0.44],[6.98,-0.72],[6.75,-2.73],[7.52,-2.86],[8.11,-2.66]]],"inset":null},{"id":"OK","name":"Oklahoma","capital":"Oklahoma City","population":4053824,"order":46,"color":"#7fdcaf","center":[-0.6,2.41],"capitalPt":[-0.6,2.5],"polys":[[[-2.15,1.26],[1.19,1.31],[1.32,3.93],[0.84,3.68],[0.13,3.9],[-0.24,3.68],[-0.4,3.85],[-1.99,3.31],[-2.18,3.16],[-2.12,1.65],[-3.96,1.54],[-3.93,1.15]]],"inset":null},{"id":"OR","name":"Oregon","capital":"Salem","population":4233358,"order":33,"color":"#b466c7","center":[-13.13,-5.85],"capitalPt":[-14.23,-6.96],"polys":[[[-14.06,-7.91],[-13.94,-7.46],[-13.69,-7.3],[-11.9,-7.18],[-10.82,-6.92],[-10.66,-6.7],[-11.26,-5.75],[-11.12,-5.53],[-11.56,-3.91],[-15.52,-4.96],[-15.51,-5.64],[-15.09,-6.3],[-14.51,-7.86],[-14.21,-8.02]]],"inset":null},{"id":"PA","name":"Pennsylvania","capital":"Harrisburg","population":12961683,"order":2,"color":"#c7d074","center":[10.84,-2.73],"capitalPt":[11.45,-2.36],"polys":[[[9.54,-3.57],[9.57,-3.38],[12.04,-3.86],[12.52,-3.46],[12.34,-2.89],[12.66,-2.51],[12.17,-2.08],[9.43,-1.55],[9.15,-3.29]]],"inset":null},{"id":"RI","name":"Rhode Island","capital":"Providence","population":1095962,"order":13,"color":"#82b7d9","center":[14.17,-4.15],"capitalPt":[14.26,-4.26],"polys":[[[14.16,-4.39],[14.39,-4.2],[14.11,-3.82],[14.01,-4.34]]],"inset":null},{"id":"SC","name":"South Carolina","capital":"Columbia","population":5373555,"order":8,"color":"#d25b81","center":[9.97,2.98],"capitalPt":[9.83,2.91],"polys":[[[8.63,2.24],[9.69,2.02],[9.88,2.25],[10.58,2.15],[11.42,2.75],[11.02,3.49],[10.17,4.4],[9.66,3.71],[8.31,2.59]]],"inset":null},{"id":"SD","name":"South Dakota","capital":"Pierre","population":919318,"order":40,"color":"#7acd77","center":[-1.97,-4.55],"capitalPt":[-2.05,-4.49],"polys":[[[-3.98,-5.83],[0.05,-5.64],[-0.12,-5.39],[0.1,-5.15],[0.1,-2.97],[-0.34,-3.25],[-0.75,-3.2],[-1.06,-3.38],[-4.18,-3.56]]],"inset":null},{"id":"TN","name":"Tennessee","capital":"Nashville","population":7126489,"order":16,"color":"#9a85d6","center":[6.35,1.87],"capitalPt":[6.04,1.69],"polys":[[[5.24,1.5],[5.21,1.36],[9.12,0.97],[8.96,1.37],[7.95,1.95],[7.67,2.43],[3.92,2.77],[4.32,1.57]]],"inset":null},{"id":"TX","name":"Texas","capital":"Austin","population":30503301,"order":28,"color":"#ce9d5f","center":[-1.83,5.56],"capitalPt":[-0.81,6.54],"polys":[[[-3.23,1.59],[-2.12,1.65],[-2.18,3.16],[-1.99,3.31],[-0.4,3.85],[-0.24,3.68],[0.13,3.9],[0.84,3.68],[1.6,3.99],[1.63,5.2],[1.98,6.01],[1.8,6.99],[1.34,7.11],[1.19,6.92],[0.77,7.64],[0.36,7.84],[-0.1,7.77],[0.07,7.97],[-0.18,7.99],[-0.7,8.79],[-0.74,9.19],[-0.51,9.85],[-0.72,9.92],[-1.86,9.39],[-2.05,8.66],[-3.28,6.85],[-3.9,6.72],[-4.58,7.36],[-5.36,6.79],[-5.56,6.04],[-6.59,4.9],[-4.26,5.04],[-3.98,1.54]]],"inset":null},{"id":"UT","name":"Utah","capital":"Salt Lake City","population":3417734,"order":45,"color":"#6dd7c6","center":[-8.9,-1.26],"capitalPt":[-8.84,-2.39],"polys":[[[-8.83,-3.37],[-8.2,-3.27],[-8.33,-2.5],[-7.18,-2.33],[-7.61,0.77],[-10.63,0.27],[-9.89,-3.56]]],"inset":null},{"id":"VT","name":"Vermont","capital":"Montpelier","population":647464,"order":14,"color":"#d388c8","center":[13.15,-5.78],"capitalPt":[13.15,-5.93],"polys":[[[13.58,-6.65],[13.65,-6.32],[13.43,-6.05],[13.39,-5.44],[13.51,-4.8],[13.06,-4.7],[12.6,-6.4]]],"inset":null},{"id":"VA","name":"Virginia","capital":"Richmond","population":8715698,"order":10,"color":"#9eca63","center":[10.69,-0.06],"capitalPt":[11.55,-0.21],"polys":[[[10.73,-1.58],[11.08,-1.38],[11.21,-1.54],[11.53,-1.31],[11.52,-0.84],[12.21,-0.62],[12.32,0.0],[12.08,0.06],[12.51,0.09],[12.65,0.36],[7.91,1.13],[8.84,0.27],[9.05,0.5],[9.84,0.13],[10.09,-0.77],[10.31,-0.67]],[[12.68,-0.82],[12.49,-0.07],[12.44,-0.41]]],"inset":null},{"id":"WA","name":"Washington","capital":"Olympia","population":7812880,"order":42,"color":"#718cd3","center":[-12.38,-8.41],"capitalPt":[-13.71,-8.5],"polys":[[[-10.37,-9.19],[-10.82,-6.92],[-11.9,-7.18],[-13.69,-7.3],[-13.94,-7.46],[-14.01,-7.9],[-14.46,-8.15],[-14.33,-8.28],[-14.39,-9.39],[-14.27,-9.74],[-13.44,-9.26],[-13.41,-8.64],[-13.16,-9.13],[-13.22,-9.92]]],"inset":null},{"id":"WV","name":"West Virginia","capital":"Charleston","population":1770071,"order":35,"color":"#dc817f","center":[9.49,-0.69],"capitalPt":[8.95,-0.39],"polys":[[[9.32,-2.26],[9.43,-1.55],[10.04,-1.66],[10.1,-1.26],[10.8,-1.77],[11.12,-1.54],[11.08,-1.38],[10.73,-1.58],[10.31,-0.67],[10.09,-0.77],[9.84,0.13],[9.05,0.5],[8.48,0.01],[8.37,-0.37],[9.25,-1.52]]],"inset":null},{"id":"WI","name":"Wisconsin","capital":"Madison","population":5910955,"order":30,"color":"#66c784","center":[3.65,-4.73],"capitalPt":[4.05,-3.55],"polys":[[[3.33,-6.22],[4.79,-5.64],[4.93,-5.2],[4.72,-4.77],[5.22,-5.32],[4.88,-3.76],[4.99,-3.17],[3.38,-3.07],[3.13,-3.25],[2.88,-4.2],[2.1,-4.76],[2.17,-5.29],[2.04,-5.51],[2.34,-5.79],[2.32,-6.25],[3.08,-6.51],[3.07,-6.35]]],"inset":null},{"id":"WY","name":"Wyoming","capital":"Cheyenne","population":584057,"order":44,"color":"#ab74d0","center":[-6.13,-3.77],"capitalPt":[-4.74,-2.16],"polys":[[[-6.77,-5.41],[-4.05,-5.1],[-4.31,-2.01],[-8.33,-2.5],[-7.84,-5.57]]],"inset":null}],"decor":[],"insets":{"board":{"cx":24.8,"cz":17.0,"w":11.6,"d":10.2},"alaska":{"cx":24.8,"cz":14.85,"w":6.8,"h":4.8,"lat0":64.0},"hawaii":{"cx":24.8,"cz":19.65,"w":4.2,"h":2.2,"lat0":20.6}}};
+window.US_MAP_DATA = {"width":32.0,"height":19.85,"states":[{"id":"AL","name":"Alabama","capital":"Montgomery","population":5108468,"area":52420,"neighbors":["Florida","Georgia","Mississippi","Tennessee"],"order":22,"color":"#c78366","center":[6.27,4.3],"capitalPt":[6.64,4.6],"polys":[[[5.77,2.63],[6.87,2.53],[7.56,4.58],[7.44,4.93],[7.6,5.56],[5.89,5.74],[6.08,6.17],[5.91,6.33],[5.64,6.01],[5.58,6.3],[5.41,6.27],[5.26,5.1],[5.24,2.68]]],"inset":null},{"id":"AK","name":"Alaska","capital":"Juneau","population":733406,"area":665384,"neighbors":[],"order":49,"color":"#74d0aa","center":[25.51,14.1],"capitalPt":[27.48,15.6],"polys":[[[26.04,12.72],[26.77,12.86],[26.77,15.14],[26.97,15.12],[27.15,15.48],[27.35,15.26],[27.74,16.04],[27.93,16.16],[27.9,16.45],[27.71,16.28],[27.69,16.02],[27.38,15.41],[27.4,15.65],[27.21,15.46],[27.24,15.65],[26.9,15.33],[26.92,15.2],[26.84,15.28],[26.25,15.08],[26.17,15.15],[26.15,14.96],[26.0,14.97],[26.02,15.21],[25.64,15.41],[25.66,15.04],[25.83,14.96],[25.74,14.9],[25.37,15.36],[25.45,15.49],[25.37,15.65],[24.9,16.19],[24.57,16.28],[24.22,16.57],[24.55,16.21],[24.71,16.24],[25.05,15.53],[24.89,15.47],[24.86,15.6],[24.71,15.44],[24.55,15.56],[24.5,15.19],[24.3,15.24],[24.09,14.85],[24.27,14.43],[24.42,14.47],[24.66,14.28],[24.62,14.01],[24.44,14.16],[24.21,14.13],[23.88,13.85],[24.27,13.61],[24.34,13.74],[24.62,13.67],[24.47,13.57],[24.57,13.64],[24.56,13.51],[24.34,13.48],[24.03,13.18],[24.08,13.05],[24.32,13.03],[24.54,12.7],[25.11,12.45],[25.17,12.58],[25.27,12.5]]],"inset":"alaska"},{"id":"AZ","name":"Arizona","capital":"Phoenix","population":7431344,"area":113990,"neighbors":["California","Colorado","Nevada","New Mexico","Utah"],"order":48,"color":"#cf82d9","center":[-9.54,2.61],"capitalPt":[-9.91,3.21],"polys":[[[-7.61,0.77],[-8.21,5.14],[-9.53,4.94],[-11.78,3.62],[-11.51,3.4],[-11.59,2.94],[-11.39,2.56],[-11.08,2.32],[-11.3,1.83],[-11.18,0.87],[-10.84,1.0],[-10.63,0.27]]],"inset":null},{"id":"AR","name":"Arkansas","capital":"Little Rock","population":3067732,"area":53179,"neighbors":["Louisiana","Mississippi","Missouri","Oklahoma","Tennessee","Texas"],"order":25,"color":"#bdd25b","center":[2.58,2.92],"capitalPt":[2.69,3.03],"polys":[[[1.29,1.69],[3.95,1.6],[3.83,1.99],[4.23,1.97],[4.22,2.11],[3.55,3.46],[3.46,4.35],[1.61,4.41],[1.6,3.99],[1.32,3.93]]],"inset":null},{"id":"CA","name":"California","capital":"Sacramento","population":38965193,"area":163695,"neighbors":["Arizona","Nevada","Oregon"],"order":31,"color":"#77a5cd","center":[-13.83,-0.6],"capitalPt":[-14.74,-1.96],"polys":[[[-14.98,-4.81],[-13.21,-4.31],[-13.79,-2.04],[-11.28,1.73],[-11.08,2.32],[-11.59,2.94],[-11.56,3.46],[-13.24,3.28],[-13.32,2.65],[-13.83,2.18],[-13.87,1.92],[-15.05,1.19],[-14.93,0.8],[-15.45,-0.32],[-15.28,-0.67],[-15.56,-1.1],[-15.35,-1.78],[-15.46,-1.63],[-15.69,-1.78],[-15.94,-2.61],[-15.81,-3.28],[-16.0,-3.69],[-15.57,-4.52],[-15.52,-4.96]]],"inset":null},{"id":"CO","name":"Colorado","capital":"Denver","population":5877610,"area":104094,"neighbors":["Arizona","Kansas","Nebraska","New Mexico","Oklahoma","Utah","Wyoming"],"order":38,"color":"#d68598","center":[-5.32,-0.55],"capitalPt":[-4.94,-1.08],"polys":[[[-6.53,-2.25],[-3.15,-1.93],[-3.35,1.2],[-7.61,0.77],[-7.18,-2.33]]],"inset":null},{"id":"CT","name":"Connecticut","capital":"Hartford","population":3617176,"area":5543,"neighbors":["Massachusetts","New York","Rhode Island"],"order":5,"color":"#5fce65","center":[13.55,-3.9],"capitalPt":[13.57,-4.04],"polys":[[[13.31,-4.19],[14.01,-4.36],[14.13,-3.9],[13.17,-3.31],[13.07,-4.14]]],"inset":null},{"id":"DE","name":"Delaware","capital":"Dover","population":1031890,"area":2489,"neighbors":["Maryland","New Jersey","Pennsylvania"],"order":1,"color":"#916dd7","center":[12.45,-1.55],"capitalPt":[12.42,-1.68],"polys":[[[12.37,-2.18],[12.33,-1.9],[12.82,-1.2],[12.44,-1.13],[12.17,-2.08]]],"inset":null},{"id":"FL","name":"Florida","capital":"Tallahassee","population":22610726,"area":65758,"neighbors":["Alabama","Georgia"],"order":27,"color":"#d3b788","center":[9.51,7.13],"capitalPt":[8.13,5.94],"polys":[[[7.28,5.61],[7.6,5.56],[7.72,5.78],[9.47,5.66],[9.53,5.82],[9.62,5.43],[9.97,5.48],[11.4,8.3],[11.45,9.12],[11.28,9.57],[10.88,9.69],[10.61,9.19],[10.37,9.21],[10.0,8.46],[9.88,8.57],[9.5,8.1],[9.66,7.77],[9.45,7.91],[9.34,7.77],[9.38,6.99],[8.61,6.31],[8.33,6.18],[7.51,6.59],[6.8,6.15],[6.0,6.29],[5.89,5.74]]],"inset":null},{"id":"GA","name":"Georgia","capital":"Atlanta","population":11029227,"area":59425,"neighbors":["Alabama","Florida","North Carolina","South Carolina","Tennessee"],"order":4,"color":"#63cac3","center":[8.5,4.18],"capitalPt":[7.74,3.4],"polys":[[[8.42,2.32],[8.31,2.59],[9.66,3.71],[10.17,4.4],[9.97,5.48],[9.62,5.43],[9.61,5.8],[9.47,5.66],[7.72,5.78],[7.5,5.36],[7.56,4.58],[6.87,2.53]]],"inset":null},{"id":"HI","name":"Hawaii","capital":"Honolulu","population":1435138,"area":10932,"neighbors":[],"order":50,"color":"#d371be","center":[26.02,20.37],"capitalPt":[24.35,19.1],"polys":[[[25.93,20.85],[25.76,20.79],[25.76,20.56],[25.64,20.28],[25.8,20.06],[25.77,19.88],[26.17,20.06],[26.5,20.43],[26.38,20.56],[26.01,20.71]],[[25.28,19.33],[25.36,19.43],[25.46,19.38],[25.68,19.5],[25.65,19.6],[25.38,19.64],[25.36,19.51],[25.2,19.41]],[[23.31,18.45],[23.42,18.53],[23.4,18.64],[23.32,18.71],[23.1,18.63],[23.13,18.51]],[[24.34,18.84],[24.42,19.01],[24.38,19.11],[24.24,19.13],[24.14,18.92]]],"inset":"hawaii"},{"id":"ID","name":"Idaho","capital":"Boise","population":1964726,"area":83569,"neighbors":["Montana","Nevada","Oregon","Utah","Washington","Wyoming"],"order":43,"color":"#acdc7f","center":[-9.84,-5.43],"capitalPt":[-10.83,-5.04],"polys":[[[-9.88,-9.08],[-10.04,-8.32],[-9.96,-7.86],[-9.36,-7.13],[-9.63,-6.33],[-9.24,-6.29],[-8.91,-5.28],[-8.2,-5.27],[-8.05,-5.41],[-7.9,-5.17],[-8.2,-3.27],[-11.56,-3.91],[-11.12,-5.53],[-11.26,-5.75],[-10.64,-6.59],[-10.83,-7.2],[-10.37,-9.19]]],"inset":null},{"id":"IL","name":"Illinois","capital":"Springfield","population":12549689,"area":57914,"neighbors":["Indiana","Iowa","Kentucky","Missouri","Wisconsin"],"order":21,"color":"#6679c7","center":[4.34,-1.21],"capitalPt":[4.08,-0.98],"polys":[[[3.38,-3.07],[4.99,-3.17],[5.2,-2.58],[5.42,-0.3],[5.18,0.11],[5.16,0.73],[4.92,0.83],[4.9,1.08],[4.6,0.99],[4.45,1.17],[4.27,0.64],[3.74,0.26],[3.86,-0.24],[3.58,-0.24],[3.08,-0.88],[2.98,-1.28],[3.27,-1.83],[3.2,-2.21],[3.68,-2.54],[3.67,-2.79]]],"inset":null},{"id":"IN","name":"Indiana","capital":"Indianapolis","population":6862199,"area":36420,"neighbors":["Illinois","Kentucky","Michigan","Ohio"],"order":19,"color":"#d07c74","center":[6.06,-1.26],"capitalPt":[6.13,-1.15],"polys":[[[6.07,-2.7],[6.74,-2.78],[7.01,-0.47],[6.65,-0.39],[6.35,0.25],[6.18,0.1],[5.71,0.45],[5.41,0.33],[5.17,0.49],[5.42,-0.3],[5.2,-2.58]]],"inset":null},{"id":"IA","name":"Iowa","capital":"Des Moines","population":3207004,"area":56273,"neighbors":["Illinois","Minnesota","Missouri","Nebraska","South Dakota","Wisconsin"],"order":29,"color":"#82d9a3","center":[1.75,-2.68],"capitalPt":[1.71,-2.28],"polys":[[[2.93,-3.82],[3.12,-3.64],[3.13,-3.25],[3.69,-2.69],[3.59,-2.37],[3.2,-2.21],[3.27,-1.83],[3.02,-1.39],[2.83,-1.57],[0.48,-1.49],[-0.01,-3.14],[0.02,-3.74]]],"inset":null},{"id":"KS","name":"Kansas","capital":"Topeka","population":2940546,"area":82278,"neighbors":["Colorado","Missouri","Nebraska","Oklahoma"],"order":34,"color":"#ab5bd2","center":[-1.06,0.11],"capitalPt":[0.54,-0.29],"polys":[[[-3.12,-1.14],[0.75,-1.03],[1.0,-0.9],[0.87,-0.67],[1.17,-0.38],[1.19,1.31],[-3.35,1.2]]],"inset":null},{"id":"KY","name":"Kentucky","capital":"Frankfort","population":4526154,"area":40408,"neighbors":["Illinois","Indiana","Missouri","Ohio","Tennessee","Virginia","West Virginia"],"order":15,"color":"#cdca77","center":[6.83,0.54],"capitalPt":[7.03,-0.02],"polys":[[[7.55,-0.53],[8.15,-0.6],[8.48,0.01],[8.84,0.27],[8.22,0.98],[7.9,1.15],[4.4,1.57],[4.6,0.99],[4.9,1.08],[5.22,0.41],[5.71,0.45],[6.18,0.1],[6.35,0.25],[6.65,-0.39],[7.01,-0.47],[6.98,-0.72]]],"inset":null},{"id":"LA","name":"Louisiana","capital":"Baton Rouge","population":4573749,"area":52378,"neighbors":["Arkansas","Mississippi","Texas"],"order":18,"color":"#85c1d6","center":[3.0,5.88],"capitalPt":[3.55,6.33],"polys":[[[1.89,4.4],[3.46,4.35],[3.61,4.95],[3.3,5.42],[3.23,5.92],[4.48,5.85],[4.43,6.11],[4.67,6.47],[4.47,6.67],[4.84,6.7],[4.59,7.0],[5.07,7.22],[4.98,7.36],[4.49,7.03],[4.33,7.29],[4.02,7.21],[3.87,7.37],[3.1,6.83],[2.83,7.07],[2.21,6.91],[1.8,6.99],[1.98,6.01],[1.63,5.2],[1.61,4.41]]],"inset":null},{"id":"ME","name":"Maine","capital":"Augusta","population":1395722,"area":35380,"neighbors":["New Hampshire"],"order":23,"color":"#ce5f91","center":[14.69,-7.22],"capitalPt":[14.63,-6.37],"polys":[[[14.4,-5.29],[14.2,-5.47],[13.74,-6.92],[14.02,-7.34],[14.02,-8.11],[14.25,-8.79],[14.48,-8.63],[14.78,-8.86],[15.06,-8.72],[15.37,-7.69],[15.57,-7.69],[15.62,-7.45],[16.0,-7.18],[15.55,-6.65],[15.42,-6.74],[15.38,-6.54],[15.03,-6.58],[15.07,-6.28],[14.73,-5.92],[14.6,-5.99]]],"inset":null},{"id":"MD","name":"Maryland","capital":"Annapolis","population":6180253,"area":12406,"neighbors":["Delaware","Pennsylvania","Virginia","West Virginia"],"order":7,"color":"#7ed76d","center":[11.72,-1.44],"capitalPt":[11.88,-1.42],"polys":[[[10.04,-1.66],[12.17,-2.08],[12.44,-1.13],[12.82,-1.2],[12.77,-0.85],[12.41,-0.68],[12.39,-0.91],[12.13,-0.95],[11.98,-1.58],[12.09,-1.93],[11.88,-1.25],[12.11,-0.73],[11.56,-0.86],[11.65,-1.31],[11.31,-1.38],[11.01,-1.74],[10.47,-1.63],[10.1,-1.26]]],"inset":null},{"id":"MA","name":"Massachusetts","capital":"Boston","population":7001399,"area":10554,"neighbors":["Connecticut","New Hampshire","New York","Rhode Island","Vermont"],"order":6,"color":"#9288d3","center":[13.94,-4.52],"capitalPt":[14.35,-4.72],"polys":[[[14.32,-5.14],[14.4,-4.66],[15.07,-4.36],[14.49,-4.06],[14.24,-4.41],[13.07,-4.14],[13.06,-4.7],[14.15,-4.94]]],"inset":null},{"id":"MI","name":"Michigan","capital":"Lansing","population":10037261,"area":96714,"neighbors":["Indiana","Ohio","Wisconsin"],"order":26,"color":"#ca8f63","center":[6.67,-4.09],"capitalPt":[6.8,-3.55],"polys":[[[7.52,-2.86],[5.6,-2.66],[5.87,-3.43],[5.62,-4.09],[5.69,-4.95],[6.0,-5.33],[6.08,-5.04],[6.31,-5.85],[7.24,-5.49],[7.31,-4.87],[7.07,-4.32],[7.21,-4.27],[7.57,-4.7],[7.74,-4.55],[7.95,-3.61],[7.79,-3.62]],[[4.93,-5.2],[4.6,-5.81],[3.33,-6.22],[4.46,-6.99],[4.58,-6.94],[4.36,-6.46],[4.64,-6.58],[4.94,-6.32],[5.31,-6.28],[6.15,-6.62],[6.2,-6.4],[6.67,-6.5],[6.79,-6.13],[7.07,-6.13],[6.43,-6.1],[6.43,-5.94],[5.98,-6.08],[5.39,-5.71],[5.31,-5.83]]],"inset":null},{"id":"MN","name":"Minnesota","capital":"Saint Paul","population":5737915,"area":86936,"neighbors":["Iowa","North Dakota","South Dakota","Wisconsin"],"order":32,"color":"#71d3b8","center":[1.26,-5.92],"capitalPt":[1.94,-4.91],"polys":[[[2.47,-6.28],[2.32,-6.25],[2.34,-5.79],[2.04,-5.51],[2.17,-5.29],[2.1,-4.76],[2.88,-4.2],[3.02,-3.83],[0.1,-3.76],[0.1,-5.15],[-0.12,-5.39],[0.03,-5.95],[-0.28,-8.0],[0.78,-8.0],[0.88,-8.29],[1.02,-7.83],[1.49,-7.64],[1.91,-7.74],[2.66,-7.32],[3.03,-7.49],[3.68,-7.35],[3.11,-7.02]]],"inset":null},{"id":"MS","name":"Mississippi","capital":"Jackson","population":2939690,"area":48432,"neighbors":["Alabama","Arkansas","Louisiana","Tennessee"],"order":20,"color":"#dc7fda","center":[4.44,4.51],"capitalPt":[4.13,4.86],"polys":[[[5.07,2.69],[5.31,2.75],[5.26,5.1],[5.41,6.27],[4.67,6.47],[4.43,6.11],[4.48,5.85],[3.23,5.92],[3.3,5.42],[3.61,4.95],[3.4,3.92],[3.92,2.77]]],"inset":null},{"id":"MO","name":"Missouri","capital":"Jefferson City","population":6196156,"area":69707,"neighbors":["Arkansas","Illinois","Iowa","Kansas","Kentucky","Nebraska","Oklahoma","Tennessee"],"order":24,"color":"#a9c766","center":[2.48,0.21],"capitalPt":[2.64,0.04],"polys":[[[2.77,-1.56],[3.02,-1.39],[3.08,-0.88],[3.53,-0.28],[3.86,-0.24],[3.74,0.26],[4.27,0.64],[4.3,0.96],[4.55,1.17],[4.23,1.97],[3.83,1.99],[3.95,1.6],[1.2,1.7],[1.17,-0.38],[0.87,-0.67],[1.0,-0.9],[0.48,-1.49]]],"inset":null},{"id":"MT","name":"Montana","capital":"Helena","population":1132812,"area":147040,"neighbors":["Idaho","North Dakota","South Dakota","Wyoming"],"order":41,"color":"#7499d0","center":[-6.85,-7.06],"capitalPt":[-8.17,-6.87],"polys":[[[-3.78,-8.17],[-4.04,-5.1],[-7.84,-5.57],[-7.9,-5.17],[-8.05,-5.41],[-8.32,-5.26],[-8.97,-5.33],[-9.24,-6.29],[-9.63,-6.33],[-9.36,-7.13],[-9.96,-7.86],[-10.04,-8.32],[-9.88,-9.08]]],"inset":null},{"id":"NE","name":"Nebraska","capital":"Lincoln","population":1978379,"area":77348,"neighbors":["Colorado","Iowa","Kansas","Missouri","South Dakota","Wyoming"],"order":37,"color":"#d9828c","center":[-1.84,-2.29],"capitalPt":[-0.06,-1.67],"polys":[[[-3.77,-3.53],[-1.06,-3.38],[-0.04,-3.1],[0.27,-2.57],[0.42,-1.59],[0.75,-1.03],[-3.2,-1.14],[-3.15,-1.93],[-4.31,-2.01],[-4.18,-3.56]]],"inset":null},{"id":"NV","name":"Nevada","capital":"Carson City","population":3194176,"area":110572,"neighbors":["Arizona","California","Idaho","Oregon","Utah"],"order":36,"color":"#5bd270","center":[-11.79,-1.83],"capitalPt":[-13.62,-2.13],"polys":[[[-11.56,-3.91],[-9.89,-3.56],[-10.75,0.88],[-10.84,1.0],[-11.18,0.87],[-11.28,1.73],[-13.79,-2.04],[-13.21,-4.31]]],"inset":null},{"id":"NH","name":"New Hampshire","capital":"Concord","population":1402054,"area":9349,"neighbors":["Maine","Massachusetts","Vermont"],"order":9,"color":"#9f77cd","center":[13.81,-5.64],"capitalPt":[13.92,-5.29],"polys":[[[13.74,-6.92],[14.2,-5.47],[14.4,-5.29],[14.15,-4.94],[13.51,-4.8],[13.43,-6.05],[13.65,-6.32],[13.6,-6.86]]],"inset":null},{"id":"NJ","name":"New Jersey","capital":"Trenton","population":9290841,"area":8723,"neighbors":["Delaware","New York","Pennsylvania"],"order":3,"color":"#d6c385","center":[12.74,-2.58],"capitalPt":[12.69,-2.59],"polys":[[[12.81,-3.35],[13.03,-3.29],[12.91,-2.85],[13.08,-2.83],[13.14,-2.32],[12.87,-1.65],[12.32,-2.03],[12.67,-2.58],[12.37,-2.8],[12.34,-3.11],[12.52,-3.46]]],"inset":null},{"id":"NM","name":"New Mexico","capital":"Santa Fe","population":2114371,"area":121590,"neighbors":["Arizona","Colorado","Oklahoma","Texas","Utah"],"order":47,"color":"#5fc8ce","center":[-6.04,2.98],"capitalPt":[-5.83,2.01],"polys":[[[-6.62,0.89],[-3.93,1.15],[-4.26,5.04],[-6.57,4.82],[-6.53,5.0],[-7.62,4.86],[-7.67,5.21],[-8.21,5.14],[-7.61,0.77]]],"inset":null},{"id":"NY","name":"New York","capital":"Albany","population":19571216,"area":54555,"neighbors":["Connecticut","Massachusetts","New Jersey","Pennsylvania","Vermont"],"order":11,"color":"#d76db2","center":[11.81,-4.56],"capitalPt":[12.81,-4.56],"polys":[[[12.6,-6.4],[13.06,-4.7],[13.23,-3.51],[13.11,-3.39],[13.42,-3.31],[13.91,-3.63],[14.04,-3.54],[13.09,-2.94],[13.03,-3.29],[12.39,-3.49],[12.04,-3.86],[9.57,-3.38],[9.53,-3.59],[9.97,-4.07],[9.78,-4.41],[11.08,-4.73],[11.3,-4.92],[11.15,-5.42],[11.6,-6.04]]],"inset":null},{"id":"NC","name":"North Carolina","capital":"Raleigh","population":10835491,"area":53819,"neighbors":["Georgia","South Carolina","Tennessee","Virginia"],"order":12,"color":"#a3d388","center":[10.71,1.53],"capitalPt":[11.08,1.28],"polys":[[[9.55,0.93],[12.65,0.36],[12.78,0.65],[12.26,0.93],[12.8,0.81],[12.88,0.99],[12.47,1.38],[12.66,1.64],[12.57,1.88],[12.14,2.01],[11.78,2.69],[11.42,2.75],[10.58,2.15],[9.88,2.25],[9.69,2.02],[7.67,2.43],[7.95,1.95],[8.96,1.37],[9.12,0.97]]],"inset":null},{"id":"ND","name":"North Dakota","capital":"Bismarck","population":783926,"area":70698,"neighbors":["Minnesota","Montana","South Dakota"],"order":39,"color":"#636aca","center":[-2.0,-6.88],"capitalPt":[-2.19,-6.38],"polys":[[[-0.28,-8.0],[0.05,-5.64],[-3.98,-5.83],[-3.78,-8.17]]],"inset":null},{"id":"OH","name":"Ohio","capital":"Columbus","population":11785935,"area":44826,"neighbors":["Indiana","Kentucky","Michigan","Pennsylvania","West Virginia"],"order":17,"color":"#d38671","center":[8.02,-1.79],"capitalPt":[7.96,-1.52],"polys":[[[9.15,-3.29],[9.25,-1.52],[8.81,-1.1],[8.73,-0.77],[8.63,-0.88],[8.52,-0.41],[8.15,-0.6],[7.7,-0.44],[6.98,-0.72],[6.75,-2.73],[7.52,-2.86],[8.11,-2.66]]],"inset":null},{"id":"OK","name":"Oklahoma","capital":"Oklahoma City","population":4053824,"area":69899,"neighbors":["Arkansas","Colorado","Kansas","Missouri","New Mexico","Texas"],"order":46,"color":"#7fdcaf","center":[-0.6,2.41],"capitalPt":[-0.6,2.5],"polys":[[[-2.15,1.26],[1.19,1.31],[1.32,3.93],[0.84,3.68],[0.13,3.9],[-0.24,3.68],[-0.4,3.85],[-1.99,3.31],[-2.18,3.16],[-2.12,1.65],[-3.96,1.54],[-3.93,1.15]]],"inset":null},{"id":"OR","name":"Oregon","capital":"Salem","population":4233358,"area":98379,"neighbors":["California","Idaho","Nevada","Washington"],"order":33,"color":"#b466c7","center":[-13.13,-5.85],"capitalPt":[-14.23,-6.96],"polys":[[[-14.06,-7.91],[-13.94,-7.46],[-13.69,-7.3],[-11.9,-7.18],[-10.82,-6.92],[-10.66,-6.7],[-11.26,-5.75],[-11.12,-5.53],[-11.56,-3.91],[-15.52,-4.96],[-15.51,-5.64],[-15.09,-6.3],[-14.51,-7.86],[-14.21,-8.02]]],"inset":null},{"id":"PA","name":"Pennsylvania","capital":"Harrisburg","population":12961683,"area":46054,"neighbors":["Delaware","Maryland","New Jersey","New York","Ohio","West Virginia"],"order":2,"color":"#c7d074","center":[10.84,-2.73],"capitalPt":[11.45,-2.36],"polys":[[[9.54,-3.57],[9.57,-3.38],[12.04,-3.86],[12.52,-3.46],[12.34,-2.89],[12.66,-2.51],[12.17,-2.08],[9.43,-1.55],[9.15,-3.29]]],"inset":null},{"id":"RI","name":"Rhode Island","capital":"Providence","population":1095962,"area":1545,"neighbors":["Connecticut","Massachusetts"],"order":13,"color":"#82b7d9","center":[14.17,-4.15],"capitalPt":[14.26,-4.26],"polys":[[[14.16,-4.39],[14.39,-4.2],[14.11,-3.82],[14.01,-4.34]]],"inset":null},{"id":"SC","name":"South Carolina","capital":"Columbia","population":5373555,"area":32020,"neighbors":["Georgia","North Carolina"],"order":8,"color":"#d25b81","center":[9.97,2.98],"capitalPt":[9.83,2.91],"polys":[[[8.63,2.24],[9.69,2.02],[9.88,2.25],[10.58,2.15],[11.42,2.75],[11.02,3.49],[10.17,4.4],[9.66,3.71],[8.31,2.59]]],"inset":null},{"id":"SD","name":"South Dakota","capital":"Pierre","population":919318,"area":77116,"neighbors":["Iowa","Minnesota","Montana","Nebraska","North Dakota","Wyoming"],"order":40,"color":"#7acd77","center":[-1.97,-4.55],"capitalPt":[-2.05,-4.49],"polys":[[[-3.98,-5.83],[0.05,-5.64],[-0.12,-5.39],[0.1,-5.15],[0.1,-2.97],[-0.34,-3.25],[-0.75,-3.2],[-1.06,-3.38],[-4.18,-3.56]]],"inset":null},{"id":"TN","name":"Tennessee","capital":"Nashville","population":7126489,"area":42144,"neighbors":["Alabama","Arkansas","Georgia","Kentucky","Mississippi","Missouri","North Carolina","Virginia"],"order":16,"color":"#9a85d6","center":[6.35,1.87],"capitalPt":[6.04,1.69],"polys":[[[5.24,1.5],[5.21,1.36],[9.12,0.97],[8.96,1.37],[7.95,1.95],[7.67,2.43],[3.92,2.77],[4.32,1.57]]],"inset":null},{"id":"TX","name":"Texas","capital":"Austin","population":30503301,"area":268596,"neighbors":["Arkansas","Louisiana","New Mexico","Oklahoma"],"order":28,"color":"#ce9d5f","center":[-1.83,5.56],"capitalPt":[-0.81,6.54],"polys":[[[-3.23,1.59],[-2.12,1.65],[-2.18,3.16],[-1.99,3.31],[-0.4,3.85],[-0.24,3.68],[0.13,3.9],[0.84,3.68],[1.6,3.99],[1.63,5.2],[1.98,6.01],[1.8,6.99],[1.34,7.11],[1.19,6.92],[0.77,7.64],[0.36,7.84],[-0.1,7.77],[0.07,7.97],[-0.18,7.99],[-0.7,8.79],[-0.74,9.19],[-0.51,9.85],[-0.72,9.92],[-1.86,9.39],[-2.05,8.66],[-3.28,6.85],[-3.9,6.72],[-4.58,7.36],[-5.36,6.79],[-5.56,6.04],[-6.59,4.9],[-4.26,5.04],[-3.98,1.54]]],"inset":null},{"id":"UT","name":"Utah","capital":"Salt Lake City","population":3417734,"area":84897,"neighbors":["Arizona","Colorado","Idaho","Nevada","New Mexico","Wyoming"],"order":45,"color":"#6dd7c6","center":[-8.9,-1.26],"capitalPt":[-8.84,-2.39],"polys":[[[-8.83,-3.37],[-8.2,-3.27],[-8.33,-2.5],[-7.18,-2.33],[-7.61,0.77],[-10.63,0.27],[-9.89,-3.56]]],"inset":null},{"id":"VT","name":"Vermont","capital":"Montpelier","population":647464,"area":9616,"neighbors":["Massachusetts","New Hampshire","New York"],"order":14,"color":"#d388c8","center":[13.15,-5.78],"capitalPt":[13.15,-5.93],"polys":[[[13.58,-6.65],[13.65,-6.32],[13.43,-6.05],[13.39,-5.44],[13.51,-4.8],[13.06,-4.7],[12.6,-6.4]]],"inset":null},{"id":"VA","name":"Virginia","capital":"Richmond","population":8715698,"area":42775,"neighbors":["Kentucky","Maryland","North Carolina","Tennessee","West Virginia"],"order":10,"color":"#9eca63","center":[10.69,-0.06],"capitalPt":[11.55,-0.21],"polys":[[[10.73,-1.58],[11.08,-1.38],[11.21,-1.54],[11.53,-1.31],[11.52,-0.84],[12.21,-0.62],[12.32,0.0],[12.08,0.06],[12.51,0.09],[12.65,0.36],[7.91,1.13],[8.84,0.27],[9.05,0.5],[9.84,0.13],[10.09,-0.77],[10.31,-0.67]],[[12.68,-0.82],[12.49,-0.07],[12.44,-0.41]]],"inset":null},{"id":"WA","name":"Washington","capital":"Olympia","population":7812880,"area":71298,"neighbors":["Idaho","Oregon"],"order":42,"color":"#718cd3","center":[-12.38,-8.41],"capitalPt":[-13.71,-8.5],"polys":[[[-10.37,-9.19],[-10.82,-6.92],[-11.9,-7.18],[-13.69,-7.3],[-13.94,-7.46],[-14.01,-7.9],[-14.46,-8.15],[-14.33,-8.28],[-14.39,-9.39],[-14.27,-9.74],[-13.44,-9.26],[-13.41,-8.64],[-13.16,-9.13],[-13.22,-9.92]]],"inset":null},{"id":"WV","name":"West Virginia","capital":"Charleston","population":1770071,"area":24230,"neighbors":["Kentucky","Maryland","Ohio","Pennsylvania","Virginia"],"order":35,"color":"#dc817f","center":[9.49,-0.69],"capitalPt":[8.95,-0.39],"polys":[[[9.32,-2.26],[9.43,-1.55],[10.04,-1.66],[10.1,-1.26],[10.8,-1.77],[11.12,-1.54],[11.08,-1.38],[10.73,-1.58],[10.31,-0.67],[10.09,-0.77],[9.84,0.13],[9.05,0.5],[8.48,0.01],[8.37,-0.37],[9.25,-1.52]]],"inset":null},{"id":"WI","name":"Wisconsin","capital":"Madison","population":5910955,"area":65496,"neighbors":["Illinois","Iowa","Michigan","Minnesota"],"order":30,"color":"#66c784","center":[3.65,-4.73],"capitalPt":[4.05,-3.55],"polys":[[[3.33,-6.22],[4.79,-5.64],[4.93,-5.2],[4.72,-4.77],[5.22,-5.32],[4.88,-3.76],[4.99,-3.17],[3.38,-3.07],[3.13,-3.25],[2.88,-4.2],[2.1,-4.76],[2.17,-5.29],[2.04,-5.51],[2.34,-5.79],[2.32,-6.25],[3.08,-6.51],[3.07,-6.35]]],"inset":null},{"id":"WY","name":"Wyoming","capital":"Cheyenne","population":584057,"area":97813,"neighbors":["Colorado","Idaho","Montana","Nebraska","South Dakota","Utah"],"order":44,"color":"#ab74d0","center":[-6.13,-3.77],"capitalPt":[-4.74,-2.16],"polys":[[[-6.77,-5.41],[-4.05,-5.1],[-4.31,-2.01],[-8.33,-2.5],[-7.84,-5.57]]],"inset":null}],"decor":[],"insets":{"board":{"cx":24.8,"cz":17.0,"w":11.6,"d":10.2},"alaska":{"cx":24.8,"cz":14.85,"w":6.8,"h":4.8,"lat0":64.0},"hawaii":{"cx":24.8,"cz":19.65,"w":4.6,"h":2.4,"lat0":20.6}}};
 /* MAP_DATA_END */
 </script>
 
@@ -836,6 +916,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const DATA = window.US_MAP_DATA;
 const STATES = DATA.states;
+const STATE_BY_NAME = new Map(STATES.map(s => [s.name, s]));
 const TOTAL = STATES.length;
 // Anchor each piece to its bounding-box center so it packs neatly in the tray.
 for (const st of STATES) {
@@ -1035,8 +1116,10 @@ let pins = [];
 let pickables = [];
 const slotVisuals = new Map();
 const capPinsByState = new Map();
+const insetRings = [];
 let hoveredRef = null;
 let activeDrag = null;
+let pendingInspect = null;
 
 const game = {
   started: false, finished: false, running: false,
@@ -1386,6 +1469,7 @@ function init() {
   controls.update();
 
   setupLights();
+  for (const st of STATES) st.labelPt = chooseLabelPoint(st);
   buildTable();
   buildMapBase();
   buildDocks();
@@ -1578,6 +1662,41 @@ function buildCompass() {
   return g;
 }
 
+function chooseLabelPoint(st) {
+  const poly = st.polys[0] || [];
+  if (poly.length < 3) return [st.center[0], st.center[1]];
+  const xs = poly.map(p => p[0]);
+  const zs = poly.map(p => p[1]);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minZ = Math.min(...zs), maxZ = Math.max(...zs);
+  const padX = (maxX - minX) * 0.10;
+  const padZ = (maxZ - minZ) * 0.10;
+  const cap = st.capitalPt;
+  const cx = st.center[0], cz = st.center[1];
+  let bestX = cx, bestZ = cz, bestScore = -Infinity;
+
+  const consider = (x, z) => {
+    if (!pointInRing(x, z, poly)) return;
+    const dCap = Math.hypot(x - cap[0], z - cap[1]);
+    const dCenter = Math.hypot(x - cx, z - cz);
+    // Prefer a clear gap from the capital socket, then a central position.
+    const score = Math.min(dCap, 2.2) - dCenter * 0.12;
+    if (score > bestScore) { bestScore = score; bestX = x; bestZ = z; }
+  };
+
+  consider(cx, cz);
+  const steps = 12;
+  for (let ix = 0; ix <= steps; ix++) {
+    for (let iz = 0; iz <= steps; iz++) {
+      consider(
+        minX + padX + (maxX - minX - padX * 2) * (ix / steps),
+        minZ + padZ + (maxZ - minZ - padZ * 2) * (iz / steps)
+      );
+    }
+  }
+  return [bestX, bestZ];
+}
+
 function buildMapBase() {
   const group = new THREE.Group();
   scene.add(group);
@@ -1679,7 +1798,7 @@ function buildMapBase() {
       const fill = new THREE.Mesh(
         new THREE.ShapeGeometry(shape),
         new THREE.MeshBasicMaterial({
-          color: st.color, transparent: true, opacity: 0.145,
+          color: st.color, transparent: true, opacity: st.inset ? 0.22 : 0.145,
           depthWrite: false, side: THREE.DoubleSide
         })
       );
@@ -1693,7 +1812,7 @@ function buildMapBase() {
       const linePts = poly.map(([x, z]) => new THREE.Vector3(x, 0.155, z));
       slotGroup.add(new THREE.LineLoop(
         new THREE.BufferGeometry().setFromPoints(linePts),
-        new THREE.LineBasicMaterial({ color: st.color, transparent: true, opacity: 0.62 })
+        new THREE.LineBasicMaterial({ color: st.color, transparent: true, opacity: st.inset ? 0.85 : 0.62 })
       ));
     }
 
@@ -1717,7 +1836,8 @@ function buildMapBase() {
       height: mapLabelH, fontSize: 70, color: 'rgba(244,230,203,0.84)',
       tracking: 2, padX: 2, padY: 2, weight: 700, maxWidth: 1.8
     });
-    label.position.set(st.center[0], 0.195, st.center[1]);
+    const labelPt = st.labelPt || st.center;
+    label.position.set(labelPt[0], 0.195, labelPt[1]);
     slotGroup.add(label);
 
     const haloR = clamp(maxDim * 0.55, 0.9, 2.5);
@@ -1770,12 +1890,45 @@ function buildInsetBoard() {
   );
   scene.add(trim);
 
-  const label = makeFlatLabel('ALASKA · HAWAII', {
-    height: 0.30, fontSize: 54, color: 'rgba(235,201,143,0.78)', tracking: 4,
+  const header = makeFlatLabel('PACIFIC INSET', {
+    height: 0.28, fontSize: 52, color: 'rgba(243,207,143,0.94)', tracking: 4,
+    padX: 14, padY: 8, weight: 700,
+    bg: 'rgba(20, 14, 11, 0.82)', border: 'rgba(217, 173, 104, 0.35)'
+  });
+  header.position.set(box.cx, 0.10, box.cz - box.d / 2 - 0.40);
+  scene.add(header);
+
+  const akLabel = makeFlatLabel('ALASKA', {
+    height: 0.32, fontSize: 58, color: 'rgba(245,218,168,0.96)', tracking: 5,
     padX: 2, padY: 2, weight: 700
   });
-  label.position.set(box.cx, 0.10, box.cz + box.d / 2 - 0.55);
-  scene.add(label);
+  akLabel.position.set(box.cx, 0.10, box.cz + 0.52);
+  scene.add(akLabel);
+
+  const hiLabel = makeFlatLabel('HAWAII', {
+    height: 0.32, fontSize: 58, color: 'rgba(245,218,168,0.96)', tracking: 5,
+    padX: 2, padY: 2, weight: 700
+  });
+  hiLabel.position.set(box.cx, 0.10, box.cz + box.d / 2 - 0.55);
+  scene.add(hiLabel);
+
+  // Extra drop-zone rings for the two inset states so their target silhouettes
+  // are unmistakable on the small Pacific plaque.
+  for (const st of STATES) {
+    if (!st.inset) continue;
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.44, 0.56, 32),
+      new THREE.MeshBasicMaterial({
+        color: 0xf2cd8c, transparent: true, opacity: 0.62,
+        side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending
+      })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(st.anchor[0], 0.135, st.anchor[1]);
+    ring.renderOrder = 6;
+    scene.add(ring);
+    insetRings.push({ mesh: ring, id: st.id, phase: insetRings.length * 1.7 });
+  }
 }
 
 function buildDocks() {
@@ -1937,7 +2090,8 @@ function buildPieces() {
       height: pieceLabelH, fontSize: 74, color: 'rgba(28,18,10,0.82)', bg: 'rgba(250,239,217,0.88)',
       border: 'rgba(40,25,14,0.14)', tracking: 2, padX: 18, padY: 10, weight: 700, maxWidth: 1.4
     });
-    label.position.set(st.center[0] - st.anchor[0], PIECE_DEPTH + 0.012, st.center[1] - st.anchor[1]);
+    const labelPt = st.labelPt || st.center;
+    label.position.set(labelPt[0] - st.anchor[0], PIECE_DEPTH + 0.012, labelPt[1] - st.anchor[1]);
     label.renderOrder = 8;
     group.add(label);
 
@@ -1959,6 +2113,7 @@ function buildPieces() {
     collar.rotation.x = -Math.PI / 2;
     collar.position.y = 0.045;
     socket.add(collar);
+    socket.scale.setScalar(clamp(maxDim * 0.16, 0.52, 1));
     group.add(socket);
 
     const dock = stateDockPosition(index);
@@ -2099,6 +2254,7 @@ function setupEvents() {
   dom.addEventListener('pointerup', onPointerUp);
   dom.addEventListener('pointercancel', onPointerUp);
   dom.addEventListener('pointerleave', () => {
+    pendingInspect = null;
     hideTooltip();
     if (!activeDrag) setHoverEmissive(null);
   });
@@ -2136,6 +2292,13 @@ function setupEvents() {
     }, 1.05);
   });
   $('#factClose').addEventListener('click', hideFactCard);
+  $('#stateInfoClose').addEventListener('click', hideStateInfo);
+  $('#infoNeighbors').addEventListener('click', (e) => {
+    const chip = e.target.closest('.info-chip');
+    if (!chip) return;
+    const st = STATE_BY_NAME.get(chip.dataset.state);
+    if (st) showStateInfo(st);
+  });
   $('#rotateBtn').addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -2190,13 +2353,13 @@ function updatePointer(e) {
   raycaster.setFromCamera(pointerNdc, camera);
 }
 
-function pickAt(e) {
+function pickAt(e, includePlaced = false) {
   updatePointer(e);
   const hits = raycaster.intersectObjects(pickables, false);
   for (const hit of hits) {
     const ref = hit.object.userData.ref;
     if (!ref) continue;
-    if (ref.kind === 'state' && ref.state === 'dock') return ref;
+    if (ref.kind === 'state' && (ref.state === 'dock' || (includePlaced && ref.state === 'placed'))) return ref;
     if (ref.kind === 'pin' && (ref.state === 'dock' || ref.state === 'placed')) return ref;
   }
   return null;
@@ -2204,17 +2367,25 @@ function pickAt(e) {
 
 function onPointerDown(e) {
   if (e.button !== 0) return;
-  if (game.finished) return;
   if ($('#welcome').classList.contains('on')) return;
   sound.ensure();
-  const ref = pickAt(e);
+  pendingInspect = null;
+  const ref = pickAt(e, true);
   if (!ref) return;
-  if (ref.kind === 'pin' && ref.state !== 'dock') return;
-  e.preventDefault();
-  hideTooltip();
 
-  if (ref.kind === 'state') beginStateDrag(ref, e);
-  else beginPinDrag(ref, e);
+  if (!game.finished) {
+    if (ref.kind === 'state' && ref.state === 'dock') {
+      e.preventDefault(); hideTooltip(); beginStateDrag(ref, e); return;
+    }
+    if (ref.kind === 'pin' && ref.state === 'dock') {
+      e.preventDefault(); hideTooltip(); beginPinDrag(ref, e); return;
+    }
+  }
+
+  if ((ref.kind === 'state' || ref.kind === 'pin') && ref.state === 'placed') {
+    pendingInspect = { x: e.clientX, y: e.clientY, ref };
+    hideTooltip();
+  }
 }
 
 function dragPlanePoint(y) {
@@ -2241,7 +2412,7 @@ function beginStateDrag(piece, e) {
     kind: 'state', ref: piece,
     offsetX: piece.group.position.x - hit.x,
     offsetZ: piece.group.position.z - hit.z,
-    moved: false
+    startX: e.clientX, startY: e.clientY, moved: false
   };
   controls.enabled = false;
   renderer.domElement.classList.add('grabbing');
@@ -2254,7 +2425,9 @@ function beginStateDrag(piece, e) {
   sound.pickup();
   const turned = Math.abs(normalizeAngle(piece.group.rotation.y)) > 0.1;
   showRotateDock(true, turned);
-  if (turned) {
+  if (piece.data.inset) {
+    setHint(`${piece.data.name} belongs on the Pacific inset — bottom-right of the table.`, 'warn');
+  } else if (turned) {
     setHint('This piece is turned — rotate it with R, double-click, or the Rotate 45° button.', 'warn');
   } else {
     setHint('Move the block over its silhouette. Rotate with R, double-click, or the Rotate 45° button.', 'idle');
@@ -2274,7 +2447,7 @@ function beginPinDrag(pin, e) {
     kind: 'pin', ref: pin,
     offsetX: pin.group.position.x - hit.x,
     offsetZ: pin.group.position.z - hit.z,
-    moved: false
+    startX: e.clientX, startY: e.clientY, moved: false
   };
   controls.enabled = false;
   renderer.domElement.classList.add('grabbing');
@@ -2288,6 +2461,9 @@ function beginPinDrag(pin, e) {
 }
 
 function onPointerMove(e) {
+  if (pendingInspect) {
+    if (Math.hypot(e.clientX - pendingInspect.x, e.clientY - pendingInspect.y) > 6) pendingInspect = null;
+  }
   if (activeDrag) {
     updatePointer(e);
     const planeY = activeDrag.kind === 'state' ? DRAG_Y : PIN_DRAG_Y;
@@ -2296,18 +2472,20 @@ function onPointerMove(e) {
       const ref = activeDrag.ref;
       ref.group.position.x = hit.x + activeDrag.offsetX;
       ref.group.position.z = hit.z + activeDrag.offsetZ;
-      activeDrag.moved = true;
+      if (Math.hypot(e.clientX - activeDrag.startX, e.clientY - activeDrag.startY) > 5) activeDrag.moved = true;
       if (activeDrag.kind === 'state') updateSlotHighlight(ref);
       else updatePinHighlight(ref);
     }
   } else {
-    const ref = pickAt(e);
+    const ref = pickAt(e, true);
     updateHover(ref, e);
     if (ref) {
       const msg = ref.kind === 'state'
-        ? `${ref.data.name} — drag it onto its silhouette.`
+        ? ref.state === 'placed'
+          ? `${ref.data.name} — click for its total area, population and neighbors.`
+          : `${ref.data.name} — drag it onto its silhouette.`
         : ref.state === 'placed'
-          ? `${ref.data.capital} — capital of ${ref.data.name}.`
+          ? `${ref.data.capital} — capital of ${ref.data.name}. Click for the state dossier.`
           : `${ref.data.capital} — capital pin. Seat it on a placed state.`;
       setHint(msg, ref.state === 'placed' ? 'good' : 'idle');
     } else {
@@ -2317,6 +2495,14 @@ function onPointerMove(e) {
 }
 
 function onPointerUp(e) {
+  if (pendingInspect) {
+    const inspect = pendingInspect;
+    pendingInspect = null;
+    if (e.type !== 'pointercancel') {
+      showStateInfo(inspect.ref.data);
+    }
+    if (!activeDrag) return;
+  }
   if (!activeDrag) return;
   const drag = activeDrag;
   activeDrag = null;
@@ -2324,7 +2510,7 @@ function onPointerUp(e) {
   showRotateDock(false);
   controls.enabled = true;
 
-  if (drag.kind === 'state') endStateDrag(drag.ref);
+  if (drag.kind === 'state') endStateDrag(drag.ref, drag.moved);
   else endPinDrag(drag.ref);
 }
 
@@ -2351,8 +2537,14 @@ function findPlacedStateAt(x, z) {
   return null;
 }
 
-function endStateDrag(piece) {
+function endStateDrag(piece, wasMoved = true) {
   const st = piece.data;
+  if (!wasMoved) {
+    showStateInfo(st);
+    returnToDock(piece);
+    clearHighlights();
+    return;
+  }
   const dx = piece.group.position.x - st.anchor[0];
   const dz = piece.group.position.z - st.anchor[1];
   const dist = Math.hypot(dx, dz);
@@ -2608,6 +2800,8 @@ function onKeyDown(e) {
       showRotateDock(false);
       clearHighlights(); clearPinHighlights();
       setHint('Piece returned to its tray.', 'idle');
+    } else if ($('#stateInfo').classList.contains('on')) {
+      hideStateInfo();
     }
   } else if (e.key === 'm' || e.key === 'M') {
     toggleSound();
@@ -2622,7 +2816,9 @@ function updateHover(ref, e) {
   if (!ref) { hideTooltip(); return; }
   const tip = $('#tooltip');
   if (ref.kind === 'state') {
-    tip.innerHTML = `<b>${ref.data.name}</b><span>State block · drag to its silhouette<br>Rotate with R, double-click, or the Rotate 45° button</span>`;
+    tip.innerHTML = ref.state === 'placed'
+      ? `<b>${ref.data.name}</b><span>Placed state · click for area, population and neighboring states</span>`
+      : `<b>${ref.data.name}</b><span>State block · drag to its silhouette<br>Rotate with R, double-click, or the Rotate 45° button</span>`;
   } else if (ref.state === 'placed') {
     tip.innerHTML = `<b>${ref.data.capital}</b><span>Capital of ${ref.data.name}<br>Seated correctly in its socket</span>`;
   } else {
@@ -2718,6 +2914,51 @@ function clearPinHighlights() {
     p.collar.material.emissiveIntensity = 0.4;
     p.collar.scale.setScalar(1);
   }
+}
+
+/* ========================================================================== */
+/*  State dossier                                                             */
+/* ========================================================================== */
+
+function showStateInfo(st) {
+  if (!st) return;
+  const panel = $('#stateInfo');
+  $('#infoName').textContent = st.name;
+  $('#infoSub').innerHTML = `Capital <b>${st.capital}</b> · ${ordinal(st.order)} state admitted`;
+  $('#infoSeal').textContent = st.id;
+  $('#infoSeal').style.background = st.color;
+  $('#infoArea').textContent = st.area.toLocaleString('en-US');
+  $('#infoPopulation').textContent = st.population.toLocaleString('en-US');
+  const density = st.population / st.area;
+  $('#infoDensity').textContent = density.toLocaleString('en-US', { maximumFractionDigits: 1, minimumFractionDigits: density < 10 ? 1 : 0 });
+  const host = $('#infoNeighbors');
+  host.innerHTML = '';
+  if (!st.neighbors || st.neighbors.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'info-empty';
+    empty.textContent = st.id === 'HI' ? 'No state borders — Pacific islands.' : 'No state borders — shares an international border.';
+    host.appendChild(empty);
+  } else {
+    for (const name of st.neighbors) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'info-chip';
+      chip.dataset.state = name;
+      chip.textContent = name;
+      host.appendChild(chip);
+    }
+  }
+  const piece = pieces.find(p => p.data.id === st.id);
+  const isPlaced = piece && piece.state === 'placed';
+  $('#infoFoot').innerHTML = isPlaced
+    ? `This state is on the map. Click a <b>neighbor</b> to compare it.`
+    : `This state is still in the tray. Click a <b>neighbor</b> to compare it.`;
+  panel.classList.add('on');
+  hideTooltip();
+}
+
+function hideStateInfo() {
+  $('#stateInfo').classList.remove('on');
 }
 
 /* ========================================================================== */
@@ -2874,7 +3115,7 @@ function beginGame() {
     game.running = false;
     startTimer();
     setHint('Drag a state block from the left tray onto its matching silhouette.', 'idle');
-    showToast('The atlas is ready. Begin with any state.', 'info');
+    showToast('The atlas is ready. Alaska & Hawaii are on the Pacific inset.', 'info');
   } else {
     startTimer();
   }
@@ -2886,6 +3127,8 @@ function beginGame() {
 
 function resetBoard(scramble) {
   activeDrag = null;
+  pendingInspect = null;
+  hideStateInfo();
   showRotateDock(false);
   controls.enabled = true;
   renderer.domElement.classList.remove('grabbing');
@@ -2979,6 +3222,8 @@ function checkVictory() {
 
 function triggerVictory() {
   game.finished = true;
+  pendingInspect = null;
+  hideStateInfo();
   stopTimer();
   updateTimerUI();
   sound.victory();
@@ -3154,6 +3399,18 @@ function animate(now) {
     if (p.state === 'dock') {
       p.topMat.emissiveIntensity = 0.045 + Math.sin(t * 1.8 + p.data.order) * 0.01;
     }
+  }
+
+  // Pacific inset drop rings.
+  for (const item of insetRings) {
+    const piece = pieces.find(p => p.data.id === item.id);
+    if (piece && piece.state === 'placed') {
+      item.mesh.material.opacity = 0;
+      continue;
+    }
+    const pulse = 1 + Math.sin(t * 2.4 + item.phase) * 0.08;
+    item.mesh.scale.setScalar(pulse);
+    item.mesh.material.opacity = 0.45 + Math.sin(t * 2.4 + item.phase) * 0.16;
   }
 
   // Dust drift.

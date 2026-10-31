@@ -27,6 +27,8 @@ Three.js is loaded from jsDelivr, so the first load needs an internet connection
 
 When a state and its capital are both placed, a fact card appears with the capital, estimated population, and order of statehood.
 
+4. **Inspect the states.** Click any placed state (or a capital pin) to open its state dossier: total area, population, population density, and clickable neighboring states. Alaska and Hawaii have labeled drop zones on the Pacific inset plaque. Use the **Pacific** view button for a closer look.
+
 ## Controls
 
 | Input | Action |
@@ -39,6 +41,7 @@ When a state and its capital are both placed, a fact card appears with the capit
 | `Esc` | Return the held piece to its tray |
 | `M` | Mute / unmute synthesized audio |
 | `H` | Open the rules |
+| Click a placed state or capital pin | Open its state dossier |
 | Overview / Map / State tray / Capitals / Pacific | Fly the camera to a useful view |
 | Scramble | Reset the board and timer |
 
@@ -56,6 +59,8 @@ On touch screens, use the same drag-and-drop gestures; the view buttons along th
 - **Web Audio synthesis** — mechanical clicks, wooden snaps, a low buzz, success chimes, and a victory fanfare, all generated at runtime with no audio files.
 - **Glass HUD** — live state/capital counters, progress meters, assembly timer, sound toggle, and scramble/reset.
 - **Educational fact cards** — capital city, estimated population, and statehood order for every completed pairing.
+- **State dossier on click** — total area, population, density, and neighboring states for any placed state; neighbor chips are clickable, and the capital socket is offset from the state abbreviation so it never masks the name.
+- **Clearly marked Pacific inset** — pulsing gold drop rings, full ALASKA/HAWAII labels, a PACIFIC INSET plaque, a dedicated camera view, and a start-up hint make the two inset states easy to find.
 - **Victory sequence** — a 360° camera orbit around the glowing assembled map, golden particles, a warm map glow, and a results card with assembly time.
 - **Responsive** — desktop-first layout with a portrait camera fit and touch-friendly view controls.
 - **Full fifty-state finish** — every state and every capital, including the Alaska and Hawaii insets, assembled on one tabletop.
@@ -97,6 +102,16 @@ On touch screens, use the same drag-and-drop gestures; the view buttons along th
 
 Alaska and Hawaii are seated on the small Pacific inset plaque to the right of the main map; the other 48 states fill the contiguous baseplate.
 
+### The Pacific inset
+
+![Alaska and Hawaii drop zones on the Pacific inset](screenshot-inset.png)
+
+### State dossier
+
+Click any placed state to inspect its total area, population, density, and neighbors. Neighboring-state chips open the same dossier for another state.
+
+![State dossier for California](screenshot-info.png)
+
 ![All fifty states assembled](screenshot-complete.png)
 
 ## Project structure
@@ -108,6 +123,8 @@ tools/generate_map_data.py    # regenerates assets/mapdata.js from public-domain
 screenshot.png                # gameplay
 screenshot-menu.png           # title / rules screen
 screenshot-rotate.png         # rotate control while dragging
+screenshot-info.png           # click-to-inspect state dossier
+screenshot-inset.png          # Alaska/Hawaii drop zones
 screenshot-complete.png       # all fifty states assembled
 screenshot-victory.png        # victory sequence
 STATE.md                      # build telemetry: time and tokens
@@ -132,7 +149,8 @@ python3 tools/build.py
 - **Geometry:** US Census-derived state boundaries. The 48 contiguous states use an Albers conic projection, normalized to game units and simplified with Douglas–Peucker; Alaska and Hawaii use local inset projections on the Pacific plaque. States with multiple landmasses (for example Michigan and Hawaii) keep their significant islands.
 - **Rendering:** PCF soft shadows, ACES filmic tone mapping, procedural canvas textures, additive particles, and `MeshStandardMaterial`/`MeshPhysicalMaterial` throughout.
 - **Interaction:** a single `Raycaster`, invisible per-polygon pick proxies, a horizontal drag plane, tag-based tween manager, and state-machine flags for dock / dragging / placing / placed / returning.
-- **Validation:** orientation-aware state snapping and point-in-polygon capital validation against placed state geometry.
+- **Validation:** orientation-aware state snapping, point-in-polygon capital validation against placed state geometry, and a label planner that offsets each state abbreviation away from its capital socket.
+- **State dossier:** area and neighbor metadata are part of the generated map data, so the click inspector remains fully self-contained.
 - **Audio:** no assets; oscillators, filtered noise, and scheduled envelopes through the Web Audio API.
 
 ## Credits

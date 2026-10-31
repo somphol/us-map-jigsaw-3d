@@ -1,21 +1,21 @@
 {
   "project": "us-map-jigsaw-3d",
-  "description": "An interactive 3D United States map & capitals jigsaw with all fifty states and capitals in one self-contained HTML file, built with Three.js.",
+  "description": "An interactive 3D United States map & capitals jigsaw with all fifty states, a Pacific inset for Alaska and Hawaii, and a click-to-inspect state dossier.",
   "build": {
     "startedAt": "2026-10-31T18:24:10.762000Z",
-    "completedAt": "2026-10-31T19:38:36.623051Z",
-    "durationSeconds": 4465.9,
-    "durationHuman": "1h 14m 26s",
+    "completedAt": "2026-10-31T22:24:01.217430Z",
+    "durationSeconds": 14390.5,
+    "durationHuman": "3h 59m 50s",
     "timezone": "UTC"
   },
   "tokens": {
-    "input": 589096,
-    "output": 122782,
-    "reasoning": 172829,
-    "cacheRead": 53404800,
+    "input": 1075531,
+    "output": 150052,
+    "reasoning": 225251,
+    "cacheRead": 79892992,
     "cacheWrite": 1172,
-    "total": 884707,
-    "totalWithCache": 54290679,
+    "total": 1450834,
+    "totalWithCache": 81344998,
     "note": "Snapshot from the OpenCode session record when the project was packaged. total = input + output + reasoning. Cache reads/writes are reported separately because they are a subset of context usage."
   },
   "cost": {
@@ -42,9 +42,10 @@
       "Alaska",
       "Hawaii"
     ],
+    "stateDossier": true,
     "singleFile": "index.html",
-    "htmlBytes": 146664,
-    "htmlLines": 3309
+    "htmlBytes": 162264,
+    "htmlLines": 3566
   },
   "artifacts": [
     "index.html",
@@ -54,6 +55,8 @@
     "screenshot.png",
     "screenshot-menu.png",
     "screenshot-rotate.png",
+    "screenshot-info.png",
+    "screenshot-inset.png",
     "screenshot-complete.png",
     "screenshot-victory.png",
     "assets/mapdata.js",
