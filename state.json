@@ -49,6 +49,7 @@
     "state.json",
     "screenshot.png",
     "screenshot-menu.png",
+    "screenshot-rotate.png",
     "screenshot-victory.png",
     "assets/mapdata.js",
     "tools/generate_map_data.py",

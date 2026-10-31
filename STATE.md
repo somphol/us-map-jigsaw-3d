@@ -30,10 +30,11 @@
 
 - One self-contained `index.html`: **133,978 bytes, 3,143 lines**.
 - 30 playable extruded state blocks with capital sockets, and 30 labeled 3D capital pins.
+- Discoverable on-screen **Rotate 45°** control while dragging, alongside `R` and double-click rotation.
 - All 48 contiguous state outlines on the baseplate, with 18 non-playable states rendered as muted inlays.
 - Raycast drag-and-drop, 45° rotation, dual-snap validation with rotation checks, wrong-capital rejection, Web Audio synthesis, fact cards, live timer, scramble/reset, and a 360° victory orbit with particles.
 - Procedural mahogany/felt textures, semi-transparent recessed map plate, soft shadows, compass rose, and a responsive glass HUD.
-- Separately reproducible map build pipeline in `tools/` and three rendered screenshots.
+- Separately reproducible map build pipeline in `tools/` and four rendered screenshots.
 
 ## Credits
 
