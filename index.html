@@ -1,0 +1,3143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#140d09">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23190f09'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23d9ad68' stroke-width='2'/%3E%3Ctext x='32' y='40' font-family='Georgia,serif' font-size='20' fill='%23f3cf8f' text-anchor='middle'%3EUS%3C/text%3E%3C/svg%3E">
+<title>United States Atlas — A 3D Map &amp; Capitals Jigsaw</title>
+<meta name="description" content="An interactive 3D jigsaw of the United States. Place thirty signature state blocks, rotate them into alignment, then crown each one with its capital pin.">
+<style>
+  :root {
+    --ink: #f6ead7;
+    --ink-dim: #c9b99f;
+    --muted: #9c8c76;
+    --gold: #d9ad68;
+    --gold-bright: #f3cf8f;
+    --gold-deep: #9d7137;
+    --wine: #4a171a;
+    --glass: rgba(23, 16, 12, 0.66);
+    --glass-strong: rgba(20, 14, 11, 0.86);
+    --line: rgba(226, 190, 133, 0.20);
+    --line-bright: rgba(240, 203, 143, 0.42);
+    --green: #8fc6a4;
+    --red: #e07767;
+    --shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+    --sans: "Avenir Next", Avenir, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+  body {
+    background: #100a07;
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  button { font: inherit; color: inherit; }
+  button:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
+
+  #scene { position: fixed; inset: 0; }
+  #scene canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+  #scene canvas.grabbing { cursor: grabbing; }
+  #scene canvas.pickable { cursor: pointer; }
+
+  .vignette {
+    position: fixed; inset: 0; pointer-events: none; z-index: 2;
+    background:
+      radial-gradient(ellipse at 50% 44%, transparent 36%, rgba(8, 5, 3, 0.30) 74%, rgba(8, 5, 3, 0.62) 100%),
+      linear-gradient(to bottom, rgba(7, 4, 2, 0.35), transparent 18%, transparent 80%, rgba(7, 4, 2, 0.38));
+  }
+
+  /* ---------------------------------- HUD ---------------------------------- */
+  .hud {
+    position: fixed;
+    z-index: 20;
+    top: 16px; left: 50%;
+    transform: translateX(-50%);
+    width: min(1180px, calc(100vw - 28px));
+    display: grid;
+    grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr);
+    align-items: center;
+    gap: 22px;
+    padding: 12px 14px 12px 18px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background:
+      linear-gradient(135deg, rgba(70, 44, 27, 0.20), transparent 40%),
+      var(--glass);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 240, 214, 0.06);
+    backdrop-filter: blur(18px) saturate(115%);
+    -webkit-backdrop-filter: blur(18px) saturate(115%);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .brand-mark {
+    width: 42px; height: 42px; flex: 0 0 42px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--line-bright);
+    box-shadow: inset 0 0 0 3px rgba(217, 173, 104, 0.06), 0 4px 14px rgba(0, 0, 0, 0.35);
+    background: radial-gradient(circle at 38% 30%, rgba(243, 207, 143, 0.16), rgba(30, 19, 12, 0.2) 68%);
+    font-family: var(--serif);
+    font-size: 19px;
+    letter-spacing: -0.05em;
+    color: var(--gold-bright);
+  }
+  .brand-text { min-width: 0; }
+  .brand-name {
+    font-family: var(--serif);
+    font-size: 18px;
+    letter-spacing: 0.015em;
+    line-height: 1.05;
+    white-space: nowrap;
+  }
+  .brand-sub {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .stats { display: flex; align-items: stretch; gap: 4px; }
+  .stat {
+    min-width: 118px;
+    padding: 2px 14px;
+    border-left: 1px solid rgba(217, 173, 104, 0.16);
+  }
+  .stat:first-child { border-left: 0; }
+  .stat-label {
+    color: var(--muted);
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .stat-value {
+    display: flex; align-items: baseline; gap: 4px;
+    margin-top: 3px;
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .stat-value .denom { color: var(--muted); font-size: 12px; }
+  .bar {
+    height: 2px; margin-top: 7px; border-radius: 2px;
+    background: rgba(255, 255, 255, 0.09);
+    overflow: hidden;
+  }
+  .bar > i {
+    display: block; height: 100%; width: 0%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright));
+    transition: width 0.45s cubic-bezier(.22,.9,.3,1);
+  }
+  .bar.caps > i { background: linear-gradient(90deg, #7f9f8e, #c8e3cf); }
+  .timer-value { letter-spacing: 0.02em; }
+
+  .hud-actions { display: flex; justify-content: flex-end; align-items: center; gap: 7px; }
+  .btn {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(255, 246, 228, 0.035);
+    color: var(--ink-dim);
+    height: 38px;
+    padding: 0 13px;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.055em;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    transition: border-color .2s, color .2s, background .2s, transform .2s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--line-bright); color: var(--ink); background: rgba(243, 207, 143, 0.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+  .btn.primary {
+    border-color: rgba(230, 190, 125, 0.56);
+    background: linear-gradient(180deg, #e6bd7c, #c99753);
+    color: #23170c;
+    box-shadow: 0 4px 16px rgba(188, 137, 72, 0.20), inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .btn.primary:hover { background: linear-gradient(180deg, #f1ce91, #d5a45e); color: #1c1209; }
+  .btn.icon { width: 38px; padding: 0; }
+
+  /* -------------------------------- Hint bar ------------------------------- */
+  .hint-wrap {
+    position: fixed; z-index: 20; left: 50%; bottom: 20px;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px;
+    pointer-events: none;
+  }
+  .hint {
+    padding: 8px 16px;
+    border: 1px solid rgba(217, 173, 104, 0.18);
+    border-radius: 999px;
+    background: rgba(18, 12, 9, 0.62);
+    color: var(--ink-dim);
+    font-size: 10.5px;
+    letter-spacing: 0.045em;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+    transition: color .2s, border-color .2s, background .2s;
+    white-space: nowrap;
+  }
+  .hint[data-tone="good"] { color: #d7e9cf; border-color: rgba(143, 198, 164, 0.44); }
+  .hint[data-tone="warn"] { color: #f0c49b; border-color: rgba(224, 157, 109, 0.50); }
+  .hint[data-tone="bad"] { color: #f1a89b; border-color: rgba(224, 119, 103, 0.54); }
+  .hint kbd {
+    display: inline-block; margin: 0 2px; padding: 1px 6px;
+    border: 1px solid rgba(226, 190, 133, 0.30);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    font-family: var(--sans);
+    font-size: 9px;
+    color: var(--ink);
+  }
+
+  .side-note {
+    position: fixed; z-index: 20; right: 22px; bottom: 20px;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+    color: rgba(201, 185, 159, 0.48);
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+  .side-note strong { color: rgba(217, 173, 104, 0.66); font-weight: 700; }
+  .side-note .credit { letter-spacing: 0.12em; }
+
+  .view-tools {
+    position: fixed; z-index: 20; left: 22px; bottom: 20px;
+    display: flex; gap: 6px;
+  }
+  .view-tools .btn { height: 32px; font-size: 9.5px; padding: 0 10px; background: rgba(18, 12, 9, 0.52); backdrop-filter: blur(10px); }
+
+  /* -------------------------------- Tooltip -------------------------------- */
+  #tooltip {
+    position: fixed; z-index: 50; pointer-events: none;
+    min-width: 150px; max-width: 255px;
+    padding: 9px 12px 9px;
+    border: 1px solid rgba(226, 190, 133, 0.25);
+    border-radius: 10px;
+    background: rgba(17, 12, 9, 0.90);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.42);
+    backdrop-filter: blur(10px);
+    opacity: 0; transform: translateY(5px);
+    transition: opacity .14s ease, transform .14s ease;
+  }
+  #tooltip.on { opacity: 1; transform: translateY(0); }
+  #tooltip b {
+    display: block;
+    font-family: var(--serif);
+    font-size: 15px; font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+  }
+  #tooltip span {
+    display: block; margin-top: 3px;
+    color: var(--muted); font-size: 9px; line-height: 1.45;
+    letter-spacing: 0.035em;
+  }
+
+  /* --------------------------------- Toasts -------------------------------- */
+  .toasts {
+    position: fixed; z-index: 60; left: 50%; bottom: 68px;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    pointer-events: none;
+    width: min(520px, calc(100vw - 40px));
+  }
+  .toast {
+    display: flex; align-items: center; gap: 9px;
+    max-width: 100%;
+    padding: 10px 15px;
+    border: 1px solid rgba(226, 190, 133, 0.24);
+    border-radius: 11px;
+    background: rgba(20, 14, 11, 0.94);
+    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.46);
+    color: var(--ink-dim);
+    font-size: 10.5px; letter-spacing: 0.035em; line-height: 1.45;
+    opacity: 0; transform: translateY(8px) scale(.98);
+    transition: opacity .22s ease, transform .22s ease;
+    backdrop-filter: blur(14px);
+  }
+  .toast.on { opacity: 1; transform: translateY(0) scale(1); }
+  .toast .dot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 6px; background: var(--gold); }
+  .toast[data-tone="good"] { border-color: rgba(143, 198, 164, 0.35); color: #d9ead3; }
+  .toast[data-tone="good"] .dot { background: var(--green); }
+  .toast[data-tone="bad"] { border-color: rgba(224, 119, 103, 0.42); color: #f3c1b6; }
+  .toast[data-tone="bad"] .dot { background: var(--red); }
+  .toast[data-tone="warn"] { border-color: rgba(224, 157, 109, 0.42); color: #f0c9a5; }
+  .toast[data-tone="warn"] .dot { background: #e09d6d; }
+
+  /* -------------------------------- Fact card ------------------------------ */
+  .fact-card {
+    position: fixed; z-index: 35;
+    top: 108px; right: 22px;
+    width: 318px;
+    padding: 18px;
+    border: 1px solid rgba(226, 190, 133, 0.34);
+    border-radius: 16px;
+    background:
+      radial-gradient(circle at 92% 4%, rgba(217, 173, 104, 0.18), transparent 40%),
+      linear-gradient(150deg, rgba(54, 37, 24, 0.94), rgba(22, 15, 11, 0.96));
+    box-shadow: 0 26px 70px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 239, 209, 0.10);
+    backdrop-filter: blur(18px);
+    transform: translateX(calc(100% + 40px)) rotate(1.2deg);
+    opacity: 0;
+    transition: transform .48s cubic-bezier(.16,.9,.3,1), opacity .38s ease;
+    pointer-events: none;
+  }
+  .fact-card.on { transform: translateX(0) rotate(0); opacity: 1; pointer-events: auto; }
+  .fact-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .fact-eyebrow { color: var(--gold); font-size: 8px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; }
+  .fact-state { margin-top: 5px; font-family: var(--serif); font-size: 27px; line-height: 1; letter-spacing: -0.01em; }
+  .fact-seal {
+    width: 48px; height: 48px; flex: 0 0 48px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.20);
+    box-shadow: inset 0 0 0 4px rgba(0,0,0,.12), 0 5px 16px rgba(0,0,0,.26);
+    color: #1d130b;
+    font-family: var(--serif); font-size: 15px; font-weight: 700; letter-spacing: .02em;
+    text-shadow: 0 1px 0 rgba(255,255,255,.20);
+  }
+  .fact-rule { height: 1px; margin: 15px 0 13px; background: linear-gradient(90deg, var(--line-bright), transparent); }
+  .fact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+  .fact-cell small {
+    display: block; color: var(--muted);
+    font-size: 7.5px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  }
+  .fact-cell strong {
+    display: block; margin-top: 4px;
+    font-family: var(--serif); font-size: 15.5px; line-height: 1.12; font-weight: 600;
+    color: var(--ink);
+  }
+  .fact-cell.wide { grid-column: span 2; }
+  .fact-foot {
+    display: flex; align-items: center; gap: 7px;
+    margin-top: 15px; padding-top: 12px;
+    border-top: 1px solid rgba(226, 190, 133, 0.14);
+    color: var(--muted); font-size: 8.5px; letter-spacing: 0.06em; line-height: 1.4;
+  }
+  .fact-foot .check {
+    width: 16px; height: 16px; border-radius: 50%;
+    display: grid; place-items: center; flex: 0 0 16px;
+    background: rgba(143, 198, 164, 0.16);
+    color: var(--green); font-size: 10px;
+  }
+  .fact-close {
+    position: absolute; top: 8px; right: 8px;
+    width: 22px; height: 22px; border: 0; border-radius: 50%;
+    background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1;
+  }
+  .fact-close:hover { color: var(--ink); background: rgba(255,255,255,.06); }
+
+  /* -------------------------------- Overlays ------------------------------- */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 100;
+    display: grid; place-items: center;
+    padding: 24px;
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(65, 41, 24, 0.28), transparent 52%),
+      rgba(8, 5, 3, 0.68);
+    backdrop-filter: blur(11px) saturate(105%);
+    -webkit-backdrop-filter: blur(11px) saturate(105%);
+    opacity: 0; visibility: hidden;
+    transition: opacity .38s ease, visibility .38s;
+  }
+  .modal-backdrop.on { opacity: 1; visibility: visible; }
+  .modal {
+    width: min(790px, calc(100vw - 32px));
+    max-height: min(88vh, 760px);
+    overflow: auto;
+    display: grid;
+    grid-template-columns: 1.02fr 0.98fr;
+    border: 1px solid rgba(226, 190, 133, 0.30);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 14% 0%, rgba(111, 69, 36, 0.38), transparent 42%),
+      linear-gradient(145deg, rgba(38, 25, 17, 0.98), rgba(15, 10, 7, 0.99));
+    box-shadow: 0 44px 120px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 239, 209, 0.10);
+    transform: translateY(14px) scale(.985);
+    transition: transform .48s cubic-bezier(.16,.9,.3,1);
+    scrollbar-width: thin;
+  }
+  .modal-backdrop.on .modal { transform: translateY(0) scale(1); }
+  .modal-hero {
+    position: relative;
+    padding: 34px 30px 30px;
+    border-right: 1px solid rgba(226, 190, 133, 0.14);
+    overflow: hidden;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 100%;
+  }
+  .modal-hero::before {
+    content: "";
+    position: absolute; inset: -20% -35% auto auto;
+    width: 310px; height: 310px; border-radius: 50%;
+    border: 1px solid rgba(217, 173, 104, 0.12);
+    box-shadow: 0 0 0 26px rgba(217, 173, 104, 0.025), 0 0 0 58px rgba(217, 173, 104, 0.018);
+    pointer-events: none;
+  }
+  .eyebrow {
+    color: var(--gold); font-size: 8px; font-weight: 700;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .eyebrow::before { content: ""; width: 24px; height: 1px; background: var(--gold); opacity: .7; }
+  .modal-title {
+    margin: 14px 0 0;
+    font-family: var(--serif);
+    font-size: clamp(42px, 6vw, 64px);
+    line-height: 0.90;
+    letter-spacing: -0.035em;
+    font-weight: 400;
+  }
+  .modal-title em { font-style: italic; color: var(--gold-bright); }
+  .modal-sub {
+    margin: 14px 0 0;
+    max-width: 290px;
+    color: var(--ink-dim);
+    font-size: 11px; line-height: 1.65; letter-spacing: 0.015em;
+  }
+  .hero-stats { display: flex; gap: 22px; margin-top: 30px; }
+  .hero-stat strong { display: block; font-family: var(--serif); font-size: 26px; line-height: 1; color: var(--gold-bright); }
+  .hero-stat span { display: block; margin-top: 4px; color: var(--muted); font-size: 7.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+  .hero-credit {
+    margin-top: 28px; color: rgba(201, 185, 159, 0.55);
+    font-size: 8px; letter-spacing: .13em; text-transform: uppercase; line-height: 1.6;
+  }
+  .hero-credit strong { color: rgba(217, 173, 104, 0.80); font-weight: 700; }
+
+  .modal-body { padding: 32px 30px 28px; display: flex; flex-direction: column; }
+  .modal-body h3 {
+    margin: 0; font-family: var(--serif); font-size: 20px; font-weight: 500; letter-spacing: -.01em;
+  }
+  .steps { display: flex; flex-direction: column; gap: 15px; margin: 19px 0 0; }
+  .step { display: grid; grid-template-columns: 27px 1fr; gap: 11px; align-items: start; }
+  .step-num {
+    width: 27px; height: 27px; display: grid; place-items: center;
+    border: 1px solid rgba(217, 173, 104, 0.30); border-radius: 50%;
+    color: var(--gold-bright); font-family: var(--serif); font-size: 12px;
+    background: rgba(217, 173, 104, 0.06);
+  }
+  .step b { display: block; font-size: 11.5px; font-weight: 650; letter-spacing: .01em; color: var(--ink); }
+  .step p { margin: 3px 0 0; color: var(--muted); font-size: 9.5px; line-height: 1.55; letter-spacing: .01em; }
+  .key-legend {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px;
+    margin-top: 21px; padding: 13px;
+    border: 1px solid rgba(226, 190, 133, 0.14); border-radius: 12px;
+    background: rgba(255, 246, 228, 0.025);
+  }
+  .key-legend div { color: var(--ink-dim); font-size: 9px; letter-spacing: .015em; display: flex; align-items: center; gap: 7px; }
+  kbd {
+    display: inline-grid; place-items: center; min-width: 21px; height: 19px; padding: 0 5px;
+    border: 1px solid rgba(226, 190, 133, 0.28); border-bottom-color: rgba(226, 190, 133, 0.42);
+    border-radius: 4px; background: rgba(255,255,255,.045);
+    color: var(--ink); font-family: var(--sans); font-size: 8px; font-weight: 700;
+  }
+  .modal-actions { display: flex; flex-direction: column; gap: 9px; margin-top: auto; padding-top: 25px; }
+  .modal-actions .btn { height: 46px; font-size: 12px; letter-spacing: .08em; width: 100%; }
+  .modal-actions .small { height: 34px; font-size: 9.5px; color: var(--muted); border-color: transparent; background: transparent; }
+  .modal-actions .small:hover { color: var(--ink); background: rgba(255,255,255,.04); }
+  .fineprint { margin-top: 12px; color: rgba(201, 185, 159, 0.45); font-size: 8px; line-height: 1.5; text-align: center; letter-spacing: .03em; }
+
+  /* ------------------------------- Victory --------------------------------- */
+  .victory-backdrop {
+    position: fixed; inset: 0; z-index: 90;
+    display: grid; place-items: center;
+    padding: 24px;
+    background: radial-gradient(ellipse at 50% 50%, transparent 18%, rgba(10, 6, 3, 0.52) 82%);
+    opacity: 0; visibility: hidden;
+    transition: opacity .6s ease, visibility .6s;
+    pointer-events: none;
+  }
+  .victory-backdrop.on { opacity: 1; visibility: visible; pointer-events: auto; }
+  .victory {
+    width: min(560px, calc(100vw - 36px));
+    padding: 34px 34px 28px;
+    border: 1px solid rgba(243, 207, 143, 0.45);
+    border-radius: 22px;
+    text-align: center;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(180, 123, 59, 0.34), transparent 55%),
+      linear-gradient(160deg, rgba(43, 28, 18, 0.95), rgba(16, 11, 8, 0.97));
+    box-shadow: 0 40px 130px rgba(0, 0, 0, 0.68), inset 0 1px 0 rgba(255, 239, 209, 0.16);
+    transform: translateY(16px) scale(.97);
+    transition: transform .7s cubic-bezier(.16,.9,.3,1);
+  }
+  .victory-backdrop.on .victory { transform: translateY(0) scale(1); }
+  .victory-seal {
+    width: 66px; height: 66px; margin: 0 auto 18px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(243, 207, 143, 0.55);
+    box-shadow: 0 0 0 7px rgba(217, 173, 104, 0.07), 0 0 42px rgba(217, 173, 104, 0.22);
+    color: var(--gold-bright); font-size: 30px;
+  }
+  .victory h2 {
+    margin: 0; font-family: var(--serif); font-size: clamp(36px, 6vw, 51px);
+    line-height: .95; font-weight: 400; letter-spacing: -.03em;
+  }
+  .victory h2 em { color: var(--gold-bright); font-style: italic; }
+  .victory p { margin: 13px auto 0; max-width: 390px; color: var(--ink-dim); font-size: 10.5px; line-height: 1.65; }
+  .victory-stats { display: flex; justify-content: center; gap: 26px; margin-top: 25px; padding: 17px 0; border-top: 1px solid rgba(226, 190, 133, 0.16); border-bottom: 1px solid rgba(226, 190, 133, 0.16); }
+  .victory-stat strong { display: block; font-family: var(--serif); font-size: 24px; line-height: 1; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
+  .victory-stat span { display: block; margin-top: 5px; color: var(--muted); font-size: 7.5px; font-weight: 700; letter-spacing: .17em; text-transform: uppercase; }
+  .victory-actions { display: flex; justify-content: center; gap: 9px; margin-top: 24px; }
+  .victory-actions .btn { height: 42px; font-size: 10.5px; }
+  .victory-credit { margin-top: 17px; color: rgba(201, 185, 159, 0.45); font-size: 7.5px; letter-spacing: .14em; text-transform: uppercase; }
+  .victory-credit strong { color: rgba(217, 173, 104, 0.68); font-weight: 700; }
+
+  /* -------------------------------- Loader --------------------------------- */
+  #loader {
+    position: fixed; inset: 0; z-index: 200;
+    display: grid; place-items: center;
+    background: radial-gradient(ellipse at 50% 45%, #26170e, #0b0705 72%);
+    transition: opacity .6s ease, visibility .6s;
+  }
+  #loader.hide { opacity: 0; visibility: hidden; }
+  .loader-inner { text-align: center; }
+  .loader-ring {
+    width: 58px; height: 58px; margin: 0 auto 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(217, 173, 104, 0.20);
+    border-top-color: var(--gold-bright);
+    animation: spin 1.2s linear infinite;
+    box-shadow: 0 0 32px rgba(217, 173, 104, 0.10);
+  }
+  .loader-title { font-family: var(--serif); font-size: 21px; color: var(--ink); letter-spacing: .01em; }
+  .loader-sub { margin-top: 7px; color: var(--muted); font-size: 8.5px; letter-spacing: .24em; text-transform: uppercase; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #flash {
+    position: fixed; inset: 0; z-index: 80; pointer-events: none; opacity: 0;
+    background: radial-gradient(ellipse at 50% 55%, transparent 38%, rgba(202, 54, 38, 0.40) 100%);
+  }
+  #flash.on { animation: redflash .46s ease-out; }
+  @keyframes redflash { 0% { opacity: 0; } 18% { opacity: .85; } 100% { opacity: 0; } }
+
+  @media (max-width: 980px) {
+    .hud { grid-template-columns: 1fr auto; gap: 12px; }
+    .brand-sub { display: none; }
+    .stats { display: none; }
+    .fact-card { top: auto; right: 14px; bottom: 78px; width: min(318px, calc(100vw - 28px)); }
+    .view-tools { left: 10px; bottom: 56px; display: flex; flex-wrap: wrap; max-width: calc(100vw - 20px); }
+    .view-tools .btn { height: 27px; font-size: 8px; padding: 0 7px; }
+    .side-note { display: none; }
+  }
+  @media (max-width: 720px) {
+    .hud { top: 10px; width: calc(100vw - 20px); padding: 9px 10px 9px 12px; border-radius: 14px; }
+    .brand-mark { width: 34px; height: 34px; flex-basis: 34px; font-size: 16px; }
+    .brand-name { font-size: 15px; }
+    .hud-actions .btn:not(.primary):not(.icon) { display: none; }
+    .btn { height: 34px; padding: 0 10px; font-size: 10px; }
+    .btn.icon { width: 34px; }
+    .hint-wrap { bottom: 12px; width: calc(100vw - 20px); justify-content: center; }
+    .hint { font-size: 9px; padding: 7px 12px; white-space: normal; text-align: center; line-height: 1.45; }
+    .toasts { bottom: 96px; }
+    .fact-card { bottom: 66px; }
+    .modal { grid-template-columns: 1fr; max-height: 90vh; }
+    .modal-hero { border-right: 0; border-bottom: 1px solid rgba(226, 190, 133, 0.14); min-height: 0; padding: 28px 24px 24px; }
+    .modal-title { font-size: 48px; }
+    .modal-sub { max-width: 100%; }
+    .hero-stats { margin-top: 20px; }
+    .modal-body { padding: 24px; }
+    .victory { padding: 28px 20px 24px; }
+    .victory-stats { gap: 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+<div id="scene" aria-label="Interactive 3D United States puzzle table"></div>
+<div class="vignette"></div>
+
+<header class="hud">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">US</div>
+    <div class="brand-text">
+      <div class="brand-name">United States Atlas</div>
+      <div class="brand-sub">A dual-layer map &amp; capitals jigsaw</div>
+    </div>
+  </div>
+
+  <div class="stats" role="status" aria-live="polite">
+    <div class="stat">
+      <div class="stat-label">States placed</div>
+      <div class="stat-value"><span id="statesCount">0</span><span class="denom">/ 30</span></div>
+      <div class="bar"><i id="statesBar"></i></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Capitals placed</div>
+      <div class="stat-value"><span id="capsCount">0</span><span class="denom">/ 30</span></div>
+      <div class="bar caps"><i id="capsBar"></i></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Assembly time</div>
+      <div class="stat-value timer-value" id="timer">00:00</div>
+    </div>
+  </div>
+
+  <div class="hud-actions">
+    <button class="btn" id="helpBtn" type="button" title="How to play (H)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1 1-1 1.8"/><path d="M12 17h.01"/></svg>
+      <span>How to play</span>
+    </button>
+    <button class="btn icon" id="soundBtn" type="button" title="Toggle sound (M)" aria-label="Toggle sound">
+      <svg id="soundOnIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+      <svg id="soundOffIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" style="display:none"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="m17 9 5 6M22 9l-5 6"/></svg>
+    </button>
+    <button class="btn primary" id="scrambleBtn" type="button" title="Scramble the table and restart">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 7h-4V3"/><path d="M20 7a8 8 0 0 0-13.6-2.5L4 7"/><path d="M4 17h4v4"/><path d="M4 17a8 8 0 0 0 13.6 2.5L20 17"/></svg>
+      <span>Scramble</span>
+    </button>
+  </div>
+</header>
+
+<div class="view-tools" aria-label="Camera views">
+  <button class="btn" id="overviewBtn" type="button">Overview</button>
+  <button class="btn" id="mapViewBtn" type="button">Map view</button>
+  <button class="btn" id="stateTrayBtn" type="button">State tray</button>
+  <button class="btn" id="capTrayBtn" type="button">Capitals</button>
+</div>
+
+<div class="hint-wrap"><div class="hint" id="hint">Drag a state block from the left tray onto its matching silhouette.</div></div>
+<div class="side-note">
+  <div><strong>United States Atlas</strong></div>
+  <div class="credit">OpenCode × DeepSeek V4.1 Flash</div>
+</div>
+
+<div id="tooltip" role="tooltip"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div id="flash"></div>
+
+<aside class="fact-card" id="factCard" aria-live="polite">
+  <button class="fact-close" id="factClose" type="button" aria-label="Close fact card">×</button>
+  <div class="fact-top">
+    <div>
+      <div class="fact-eyebrow">State fact card</div>
+      <div class="fact-state" id="factState">Texas</div>
+    </div>
+    <div class="fact-seal" id="factSeal">TX</div>
+  </div>
+  <div class="fact-rule"></div>
+  <div class="fact-grid">
+    <div class="fact-cell">
+      <small>Capital city</small>
+      <strong id="factCapital">Austin</strong>
+    </div>
+    <div class="fact-cell">
+      <small>Est. population</small>
+      <strong id="factPopulation">30,503,301</strong>
+    </div>
+    <div class="fact-cell wide">
+      <small>Order of statehood</small>
+      <strong id="factOrder">28th state admitted</strong>
+    </div>
+  </div>
+  <div class="fact-foot"><span class="check">✓</span><span id="factFoot">State and capital correctly paired.</span></div>
+</aside>
+
+<div class="modal-backdrop" id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="modal">
+    <div class="modal-hero">
+      <div>
+        <div class="eyebrow">An interactive atlas</div>
+        <h1 class="modal-title" id="welcomeTitle">United<br>States <em>Atlas</em></h1>
+        <p class="modal-sub" id="welcomeSub">Thirty signature states, thirty capital pins, one sculpted tabletop. Rebuild the map, then crown every state with its capital.</p>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong>30</strong><span>States</span></div>
+          <div class="hero-stat"><strong>30</strong><span>Capitals</span></div>
+          <div class="hero-stat"><strong>3D</strong><span>Tabletop</span></div>
+        </div>
+      </div>
+      <div class="hero-credit">Crafted with <strong>OpenCode</strong><br>and <strong>DeepSeek V4.1 Flash</strong></div>
+    </div>
+    <div class="modal-body">
+      <h3>How to assemble the atlas</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">I</div>
+          <div><b>Seat the states</b><p>Drag a colored state block from the left tray onto its faint silhouette. Get close — it snaps into place.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num">II</div>
+          <div><b>Turn it true north</b><p>Some blocks begin askew. Press <kbd>R</kbd> or double-click while dragging to rotate in 45° steps until it drops.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num">III</div>
+          <div><b>Crown the capitals</b><p>Drag a brass capital pin to the glowing socket of a placed state. A wrong pairing is rejected with a buzz.</p></div>
+        </div>
+      </div>
+      <div class="key-legend" aria-label="Controls">
+        <div><kbd>R</kbd> Rotate piece</div>
+        <div><kbd>Drag</kbd> Move a piece</div>
+        <div><kbd>R-drag</kbd> Pan the table</div>
+        <div><kbd>Scroll</kbd> Zoom in / out</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn primary" id="beginBtn" type="button">Begin assembly</button>
+        <button class="btn small" id="resumeBtn" type="button" style="display:none">Return to the table</button>
+      </div>
+      <div class="fineprint">Sound is synthesized live in your browser with the Web Audio API.<br>All state geometry is embedded in this single HTML file.</div>
+    </div>
+  </div>
+</div>
+
+<div class="victory-backdrop" id="victory" role="dialog" aria-modal="true" aria-labelledby="victoryTitle">
+  <div class="victory">
+    <div class="victory-seal" aria-hidden="true">★</div>
+    <h2 id="victoryTitle">The atlas is <em>complete.</em></h2>
+    <p>Every state is in its place and every capital is seated in its socket. Fifty stars, thirty signature states, one very satisfying click.</p>
+    <div class="victory-stats">
+      <div class="victory-stat"><strong id="victoryTime">00:00</strong><span>Assembly time</span></div>
+      <div class="victory-stat"><strong>30</strong><span>States</span></div>
+      <div class="victory-stat"><strong>30</strong><span>Capitals</span></div>
+      <div class="victory-stat"><strong id="victoryFacts">0</strong><span>Fact cards</span></div>
+    </div>
+    <div class="victory-actions">
+      <button class="btn primary" id="playAgainBtn" type="button">Play again</button>
+      <button class="btn" id="exploreBtn" type="button">Keep exploring</button>
+    </div>
+    <div class="victory-credit">Built with <strong>OpenCode</strong> &amp; <strong>DeepSeek V4.1 Flash</strong> · Three.js</div>
+  </div>
+</div>
+
+<div id="loader">
+  <div class="loader-inner">
+    <div class="loader-ring"></div>
+    <div class="loader-title">Preparing the atlas</div>
+    <div class="loader-sub" id="loaderSub">Unpacking thirty states and their capitals</div>
+  </div>
+</div>
+
+<script>
+/* MAP_DATA_START */
+// Generated by tools/generate_map_data.py — public-domain US Census boundaries
+window.US_MAP_DATA = {"width":32.0,"height":19.85,"states":[{"id":"CA","name":"California","capital":"Sacramento","population":38965193,"order":31,"color":"#e8a35c","center":[-13.83,-0.6],"capitalPt":[-14.74,-1.96],"polys":[[[-14.98,-4.81],[-13.21,-4.31],[-13.79,-2.04],[-11.28,1.73],[-11.08,2.32],[-11.59,2.94],[-11.56,3.46],[-13.24,3.28],[-13.32,2.65],[-13.83,2.18],[-13.87,1.92],[-15.05,1.19],[-14.93,0.8],[-15.45,-0.32],[-15.28,-0.67],[-15.56,-1.1],[-15.35,-1.78],[-15.46,-1.63],[-15.69,-1.78],[-15.94,-2.61],[-15.81,-3.28],[-16.0,-3.69],[-15.57,-4.52],[-15.52,-4.96]]]},{"id":"TX","name":"Texas","capital":"Austin","population":30503301,"order":28,"color":"#d7765e","center":[-1.83,5.56],"capitalPt":[-0.81,6.54],"polys":[[[-3.23,1.59],[-2.12,1.65],[-2.18,3.16],[-1.99,3.31],[-0.4,3.85],[-0.24,3.68],[0.13,3.9],[0.84,3.68],[1.6,3.99],[1.63,5.2],[1.98,6.01],[1.8,6.99],[1.34,7.11],[1.19,6.92],[0.77,7.64],[0.36,7.84],[-0.1,7.77],[0.07,7.97],[-0.18,7.99],[-0.7,8.79],[-0.74,9.19],[-0.51,9.85],[-0.72,9.92],[-1.86,9.39],[-2.05,8.66],[-3.28,6.85],[-3.9,6.72],[-4.58,7.36],[-5.36,6.79],[-5.56,6.04],[-6.59,4.9],[-4.26,5.04],[-3.98,1.54]]]},{"id":"FL","name":"Florida","capital":"Tallahassee","population":22610726,"order":27,"color":"#c95f7a","center":[9.51,7.13],"capitalPt":[8.13,5.94],"polys":[[[7.28,5.61],[7.6,5.56],[7.72,5.78],[9.47,5.66],[9.53,5.82],[9.62,5.43],[9.97,5.48],[11.4,8.3],[11.45,9.12],[11.28,9.57],[10.88,9.69],[10.61,9.19],[10.37,9.21],[10.0,8.46],[9.88,8.57],[9.5,8.1],[9.66,7.77],[9.45,7.91],[9.34,7.77],[9.38,6.99],[8.61,6.31],[8.33,6.18],[7.51,6.59],[6.8,6.15],[6.0,6.29],[5.89,5.74]]]},{"id":"NY","name":"New York","capital":"Albany","population":19571216,"order":11,"color":"#b76fa8","center":[11.81,-4.56],"capitalPt":[12.81,-4.56],"polys":[[[12.6,-6.4],[13.06,-4.7],[13.23,-3.51],[13.11,-3.39],[13.42,-3.31],[13.91,-3.63],[14.04,-3.54],[13.09,-2.94],[13.03,-3.29],[12.39,-3.49],[12.04,-3.86],[9.57,-3.38],[9.53,-3.59],[9.97,-4.07],[9.78,-4.41],[11.08,-4.73],[11.3,-4.92],[11.15,-5.42],[11.6,-6.04]]]},{"id":"IL","name":"Illinois","capital":"Springfield","population":12549689,"order":21,"color":"#8a7ed6","center":[4.34,-1.21],"capitalPt":[4.08,-0.98],"polys":[[[3.38,-3.07],[4.99,-3.17],[5.2,-2.58],[5.42,-0.3],[5.18,0.11],[5.16,0.73],[4.92,0.83],[4.9,1.08],[4.6,0.99],[4.45,1.17],[4.27,0.64],[3.74,0.26],[3.86,-0.24],[3.58,-0.24],[3.08,-0.88],[2.98,-1.28],[3.27,-1.83],[3.2,-2.21],[3.68,-2.54],[3.67,-2.79]]]},{"id":"PA","name":"Pennsylvania","capital":"Harrisburg","population":12961683,"order":2,"color":"#6e93d6","center":[10.84,-2.73],"capitalPt":[11.45,-2.36],"polys":[[[9.54,-3.57],[9.57,-3.38],[12.04,-3.86],[12.52,-3.46],[12.34,-2.89],[12.66,-2.51],[12.17,-2.08],[9.43,-1.55],[9.15,-3.29]]]},{"id":"OH","name":"Ohio","capital":"Columbus","population":11785935,"order":17,"color":"#5fa8c7","center":[8.02,-1.79],"capitalPt":[7.96,-1.52],"polys":[[[9.15,-3.29],[9.25,-1.52],[8.81,-1.1],[8.73,-0.77],[8.63,-0.88],[8.52,-0.41],[8.15,-0.6],[7.7,-0.44],[6.98,-0.72],[6.75,-2.73],[7.52,-2.86],[8.11,-2.66]]]},{"id":"MI","name":"Michigan","capital":"Lansing","population":10037261,"order":26,"color":"#5fb9a6","center":[6.67,-4.09],"capitalPt":[6.8,-3.55],"polys":[[[7.52,-2.86],[5.6,-2.66],[5.87,-3.43],[5.62,-4.09],[5.69,-4.95],[6.0,-5.33],[6.08,-5.04],[6.31,-5.85],[7.24,-5.49],[7.31,-4.87],[7.07,-4.32],[7.21,-4.27],[7.57,-4.7],[7.74,-4.55],[7.95,-3.61],[7.79,-3.62]],[[4.93,-5.2],[4.6,-5.81],[3.33,-6.22],[4.46,-6.99],[4.58,-6.94],[4.36,-6.46],[4.64,-6.58],[4.94,-6.32],[5.31,-6.28],[6.15,-6.62],[6.2,-6.4],[6.67,-6.5],[6.79,-6.13],[7.07,-6.13],[6.43,-6.1],[6.43,-5.94],[5.98,-6.08],[5.39,-5.71],[5.31,-5.83]]]},{"id":"GA","name":"Georgia","capital":"Atlanta","population":11029227,"order":4,"color":"#79bd82","center":[8.5,4.18],"capitalPt":[7.74,3.4],"polys":[[[8.42,2.32],[8.31,2.59],[9.66,3.71],[10.17,4.4],[9.97,5.48],[9.62,5.43],[9.61,5.8],[9.47,5.66],[7.72,5.78],[7.5,5.36],[7.56,4.58],[6.87,2.53]]]},{"id":"NC","name":"North Carolina","capital":"Raleigh","population":10835491,"order":12,"color":"#a5c46c","center":[10.71,1.53],"capitalPt":[11.08,1.28],"polys":[[[9.55,0.93],[12.65,0.36],[12.78,0.65],[12.26,0.93],[12.8,0.81],[12.88,0.99],[12.47,1.38],[12.66,1.64],[12.57,1.88],[12.14,2.01],[11.78,2.69],[11.42,2.75],[10.58,2.15],[9.88,2.25],[9.69,2.02],[7.67,2.43],[7.95,1.95],[8.96,1.37],[9.12,0.97]]]},{"id":"WA","name":"Washington","capital":"Olympia","population":7812880,"order":42,"color":"#d0bb63","center":[-12.38,-8.41],"capitalPt":[-13.71,-8.5],"polys":[[[-10.37,-9.19],[-10.82,-6.92],[-11.9,-7.18],[-13.69,-7.3],[-13.94,-7.46],[-14.01,-7.9],[-14.46,-8.15],[-14.33,-8.28],[-14.39,-9.39],[-14.27,-9.74],[-13.44,-9.26],[-13.41,-8.64],[-13.16,-9.13],[-13.22,-9.92]]]},{"id":"AZ","name":"Arizona","capital":"Phoenix","population":7431344,"order":48,"color":"#e0a45e","center":[-9.54,2.61],"capitalPt":[-9.91,3.21],"polys":[[[-7.61,0.77],[-8.21,5.14],[-9.53,4.94],[-11.78,3.62],[-11.51,3.4],[-11.59,2.94],[-11.39,2.56],[-11.08,2.32],[-11.3,1.83],[-11.18,0.87],[-10.84,1.0],[-10.63,0.27]]]},{"id":"CO","name":"Colorado","capital":"Denver","population":5877610,"order":38,"color":"#d98c5f","center":[-5.32,-0.55],"capitalPt":[-4.94,-1.08],"polys":[[[-6.53,-2.25],[-3.15,-1.93],[-3.35,1.2],[-7.61,0.77],[-7.18,-2.33]]]},{"id":"MT","name":"Montana","capital":"Helena","population":1132812,"order":41,"color":"#cf7d6c","center":[-6.85,-7.06],"capitalPt":[-8.17,-6.87],"polys":[[[-3.78,-8.17],[-4.04,-5.1],[-7.84,-5.57],[-7.9,-5.17],[-8.05,-5.41],[-8.32,-5.26],[-8.97,-5.33],[-9.24,-6.29],[-9.63,-6.33],[-9.36,-7.13],[-9.96,-7.86],[-10.04,-8.32],[-9.88,-9.08]]]},{"id":"MN","name":"Minnesota","capital":"Saint Paul","population":5737915,"order":32,"color":"#c4708f","center":[1.26,-5.92],"capitalPt":[1.94,-4.91],"polys":[[[2.47,-6.28],[2.32,-6.25],[2.34,-5.79],[2.04,-5.51],[2.17,-5.29],[2.1,-4.76],[2.88,-4.2],[3.02,-3.83],[0.1,-3.76],[0.1,-5.15],[-0.12,-5.39],[0.03,-5.95],[-0.28,-8.0],[0.78,-8.0],[0.88,-8.29],[1.02,-7.83],[1.49,-7.64],[1.91,-7.74],[2.66,-7.32],[3.03,-7.49],[3.68,-7.35],[3.11,-7.02]]]},{"id":"MO","name":"Missouri","capital":"Jefferson City","population":6196156,"order":24,"color":"#ab7ac0","center":[2.48,0.21],"capitalPt":[2.64,0.04],"polys":[[[2.77,-1.56],[3.02,-1.39],[3.08,-0.88],[3.53,-0.28],[3.86,-0.24],[3.74,0.26],[4.27,0.64],[4.3,0.96],[4.55,1.17],[4.23,1.97],[3.83,1.99],[3.95,1.6],[1.2,1.7],[1.17,-0.38],[0.87,-0.67],[1.0,-0.9],[0.48,-1.49]]]},{"id":"TN","name":"Tennessee","capital":"Nashville","population":7126489,"order":16,"color":"#8f83ce","center":[6.35,1.87],"capitalPt":[6.04,1.69],"polys":[[[5.24,1.5],[5.21,1.36],[9.12,0.97],[8.96,1.37],[7.95,1.95],[7.67,2.43],[3.92,2.77],[4.32,1.57]]]},{"id":"VA","name":"Virginia","capital":"Richmond","population":8715698,"order":10,"color":"#7097c8","center":[10.69,-0.06],"capitalPt":[11.55,-0.21],"polys":[[[10.73,-1.58],[11.08,-1.38],[11.21,-1.54],[11.53,-1.31],[11.52,-0.84],[12.21,-0.62],[12.32,0.0],[12.08,0.06],[12.51,0.09],[12.65,0.36],[7.91,1.13],[8.84,0.27],[9.05,0.5],[9.84,0.13],[10.09,-0.77],[10.31,-0.67]],[[12.68,-0.82],[12.49,-0.07],[12.44,-0.41]]]},{"id":"OR","name":"Oregon","capital":"Salem","population":4233358,"order":33,"color":"#62aab6","center":[-13.13,-5.85],"capitalPt":[-14.23,-6.96],"polys":[[[-14.06,-7.91],[-13.94,-7.46],[-13.69,-7.3],[-11.9,-7.18],[-10.82,-6.92],[-10.66,-6.7],[-11.26,-5.75],[-11.12,-5.53],[-11.56,-3.91],[-15.52,-4.96],[-15.51,-5.64],[-15.09,-6.3],[-14.51,-7.86],[-14.21,-8.02]]]},{"id":"UT","name":"Utah","capital":"Salt Lake City","population":3417734,"order":45,"color":"#66b79c","center":[-8.9,-1.26],"capitalPt":[-8.84,-2.39],"polys":[[[-8.83,-3.37],[-8.2,-3.27],[-8.33,-2.5],[-7.18,-2.33],[-7.61,0.77],[-10.63,0.27],[-9.89,-3.56]]]},{"id":"NV","name":"Nevada","capital":"Carson City","population":3194176,"order":36,"color":"#84b978","center":[-11.79,-1.83],"capitalPt":[-13.62,-2.13],"polys":[[[-11.56,-3.91],[-9.89,-3.56],[-10.75,0.88],[-10.84,1.0],[-11.18,0.87],[-11.28,1.73],[-13.79,-2.04],[-13.21,-4.31]]]},{"id":"LA","name":"Louisiana","capital":"Baton Rouge","population":4573749,"order":18,"color":"#a9bd68","center":[3.0,5.88],"capitalPt":[3.55,6.33],"polys":[[[1.89,4.4],[3.46,4.35],[3.61,4.95],[3.3,5.42],[3.23,5.92],[4.48,5.85],[4.43,6.11],[4.67,6.47],[4.47,6.67],[4.84,6.7],[4.59,7.0],[5.07,7.22],[4.98,7.36],[4.49,7.03],[4.33,7.29],[4.02,7.21],[3.87,7.37],[3.1,6.83],[2.83,7.07],[2.21,6.91],[1.8,6.99],[1.98,6.01],[1.63,5.2],[1.61,4.41]]]},{"id":"AL","name":"Alabama","capital":"Montgomery","population":5108468,"order":22,"color":"#ccb769","center":[6.27,4.3],"capitalPt":[6.64,4.6],"polys":[[[5.77,2.63],[6.87,2.53],[7.56,4.58],[7.44,4.93],[7.6,5.56],[5.89,5.74],[6.08,6.17],[5.91,6.33],[5.64,6.01],[5.58,6.3],[5.41,6.27],[5.26,5.1],[5.24,2.68]]]},{"id":"KY","name":"Kentucky","capital":"Frankfort","population":4526154,"order":15,"color":"#dfa866","center":[6.83,0.54],"capitalPt":[7.03,-0.02],"polys":[[[7.55,-0.53],[8.15,-0.6],[8.48,0.01],[8.84,0.27],[8.22,0.98],[7.9,1.15],[4.4,1.57],[4.6,0.99],[4.9,1.08],[5.22,0.41],[5.71,0.45],[6.18,0.1],[6.35,0.25],[6.65,-0.39],[7.01,-0.47],[6.98,-0.72]]]},{"id":"ME","name":"Maine","capital":"Augusta","population":1395722,"order":23,"color":"#d89062","center":[14.69,-7.22],"capitalPt":[14.63,-6.37],"polys":[[[14.4,-5.29],[14.2,-5.47],[13.74,-6.92],[14.02,-7.34],[14.02,-8.11],[14.25,-8.79],[14.48,-8.63],[14.78,-8.86],[15.06,-8.72],[15.37,-7.69],[15.57,-7.69],[15.62,-7.45],[16.0,-7.18],[15.55,-6.65],[15.42,-6.74],[15.38,-6.54],[15.03,-6.58],[15.07,-6.28],[14.73,-5.92],[14.6,-5.99]]]},{"id":"NM","name":"New Mexico","capital":"Santa Fe","population":2114371,"order":47,"color":"#cb7d75","center":[-6.04,2.98],"capitalPt":[-5.83,2.01],"polys":[[[-6.62,0.89],[-3.93,1.15],[-4.26,5.04],[-6.57,4.82],[-6.53,5.0],[-7.62,4.86],[-7.67,5.21],[-8.21,5.14],[-7.61,0.77]]]},{"id":"SC","name":"South Carolina","capital":"Columbia","population":5373555,"order":8,"color":"#c07396","center":[9.97,2.98],"capitalPt":[9.83,2.91],"polys":[[[8.63,2.24],[9.69,2.02],[9.88,2.25],[10.58,2.15],[11.42,2.75],[11.02,3.49],[10.17,4.4],[9.66,3.71],[8.31,2.59]]]},{"id":"IA","name":"Iowa","capital":"Des Moines","population":3207004,"order":29,"color":"#a87cba","center":[1.75,-2.68],"capitalPt":[1.71,-2.28],"polys":[[[2.93,-3.82],[3.12,-3.64],[3.13,-3.25],[3.69,-2.69],[3.59,-2.37],[3.2,-2.21],[3.27,-1.83],[3.02,-1.39],[2.83,-1.57],[0.48,-1.49],[-0.01,-3.14],[0.02,-3.74]]]},{"id":"AR","name":"Arkansas","capital":"Little Rock","population":3067732,"order":25,"color":"#8c86c7","center":[2.58,2.92],"capitalPt":[2.69,3.03],"polys":[[[1.29,1.69],[3.95,1.6],[3.83,1.99],[4.23,1.97],[4.22,2.11],[3.55,3.46],[3.46,4.35],[1.61,4.41],[1.6,3.99],[1.32,3.93]]]},{"id":"KS","name":"Kansas","capital":"Topeka","population":2940546,"order":34,"color":"#6f9bc5","center":[-1.06,0.11],"capitalPt":[0.54,-0.29],"polys":[[[-3.12,-1.14],[0.75,-1.03],[1.0,-0.9],[0.87,-0.67],[1.17,-0.38],[1.19,1.31],[-3.35,1.2]]]}],"decor":[{"id":"CT","name":"Connecticut","polys":[[[13.31,-4.19],[14.01,-4.36],[14.13,-3.9],[13.17,-3.31],[13.07,-4.14]]]},{"id":"DE","name":"Delaware","polys":[[[12.37,-2.18],[12.82,-1.2],[12.44,-1.13],[12.17,-2.08]]]},{"id":"ID","name":"Idaho","polys":[[[-9.88,-9.08],[-9.96,-7.86],[-9.36,-7.13],[-9.63,-6.33],[-9.24,-6.29],[-8.91,-5.28],[-8.05,-5.41],[-7.9,-5.17],[-8.2,-3.27],[-11.56,-3.91],[-11.26,-5.75],[-10.64,-6.59],[-10.83,-7.2],[-10.37,-9.19]]]},{"id":"IN","name":"Indiana","polys":[[[6.07,-2.7],[6.74,-2.78],[7.01,-0.47],[6.65,-0.39],[6.35,0.25],[5.17,0.49],[5.42,-0.3],[5.2,-2.58]]]},{"id":"MD","name":"Maryland","polys":[[[10.04,-1.66],[12.17,-2.08],[12.44,-1.13],[12.82,-1.2],[12.77,-0.85],[12.41,-0.68],[12.13,-0.95],[12.09,-1.93],[11.88,-1.25],[12.11,-0.73],[11.56,-0.86],[11.65,-1.31],[11.01,-1.74],[10.1,-1.26]]]},{"id":"MA","name":"Massachusetts","polys":[[[14.32,-5.14],[14.4,-4.66],[15.07,-4.36],[14.49,-4.06],[14.24,-4.41],[13.07,-4.14],[13.06,-4.7]]]},{"id":"MS","name":"Mississippi","polys":[[[5.07,2.69],[5.31,2.75],[5.41,6.27],[4.67,6.47],[4.48,5.85],[3.23,5.92],[3.61,4.95],[3.4,3.92],[3.92,2.77]]]},{"id":"NE","name":"Nebraska","polys":[[[-3.77,-3.53],[-0.04,-3.1],[0.75,-1.03],[-3.2,-1.14],[-3.15,-1.93],[-4.31,-2.01],[-4.18,-3.56]]]},{"id":"NH","name":"New Hampshire","polys":[[[13.74,-6.92],[14.4,-5.29],[14.15,-4.94],[13.51,-4.8],[13.43,-6.05]]]},{"id":"NJ","name":"New Jersey","polys":[[[12.81,-3.35],[13.03,-3.29],[13.14,-2.32],[12.87,-1.65],[12.32,-2.03],[12.67,-2.58],[12.34,-3.11],[12.52,-3.46]]]},{"id":"ND","name":"North Dakota","polys":[[[-0.28,-8.0],[0.05,-5.64],[-3.98,-5.83],[-3.78,-8.17]]]},{"id":"OK","name":"Oklahoma","polys":[[[-2.15,1.26],[1.19,1.31],[1.32,3.93],[0.84,3.68],[-0.4,3.85],[-1.99,3.31],[-2.12,1.65],[-3.96,1.54],[-3.93,1.15]]]},{"id":"RI","name":"Rhode Island","polys":[[[14.16,-4.39],[14.39,-4.2],[14.11,-3.82]]]},{"id":"SD","name":"South Dakota","polys":[[[-3.98,-5.83],[0.05,-5.64],[0.1,-2.97],[-1.06,-3.38],[-4.18,-3.56]]]},{"id":"VT","name":"Vermont","polys":[[[13.58,-6.65],[13.51,-4.8],[13.06,-4.7],[12.6,-6.4]]]},{"id":"WV","name":"West Virginia","polys":[[[9.32,-2.26],[9.43,-1.55],[10.04,-1.66],[10.1,-1.26],[10.8,-1.77],[11.12,-1.54],[10.73,-1.58],[10.31,-0.67],[10.09,-0.77],[9.84,0.13],[9.05,0.5],[8.37,-0.37],[9.25,-1.52]]]},{"id":"WI","name":"Wisconsin","polys":[[[3.33,-6.22],[4.79,-5.64],[4.72,-4.77],[5.22,-5.32],[4.99,-3.17],[3.38,-3.07],[2.88,-4.2],[2.1,-4.76],[2.32,-6.25],[3.08,-6.51]]]},{"id":"WY","name":"Wyoming","polys":[[[-6.77,-5.41],[-4.05,-5.1],[-4.31,-2.01],[-8.33,-2.5],[-7.84,-5.57]]]}]};
+/* MAP_DATA_END */
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script>
+  window.__USMAP_LOADED = false;
+  window.setTimeout(function () {
+    if (!window.__USMAP_LOADED) {
+      var sub = document.getElementById('loaderSub');
+      if (sub) sub.textContent = 'Unable to load Three.js — check your connection and reload';
+    }
+  }, 9000);
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ========================================================================== */
+/*  Data & constants                                                          */
+/* ========================================================================== */
+
+const DATA = window.US_MAP_DATA;
+const STATES = DATA.states;
+const TOTAL = STATES.length;
+// Anchor each piece to its bounding-box center so it packs neatly in the tray.
+for (const st of STATES) {
+  const xs = [], zs = [];
+  for (const poly of st.polys) for (const [x, z] of poly) { xs.push(x); zs.push(z); }
+  st.anchor = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...zs) + Math.max(...zs)) / 2];
+}
+const MAP_W = DATA.width;
+const MAP_H = DATA.height;
+
+const MAP_Y = 0.24;
+const PIECE_DEPTH = 0.62;
+const SOCKET_Y = MAP_Y + PIECE_DEPTH + 0.05;
+const DOCK_Y = 0.19;
+const DRAG_Y = 1.72;
+const PIN_DRAG_Y = 1.20;
+const SNAP_RADIUS = 3.05;
+const PIN_SNAP_RADIUS = 2.85;
+
+const TRAY = {
+  state: { cx: -24.9, cz: 0, w: 14.0, d: 38.0 },
+  capital: { cx: 0, cz: 20.55, w: 27.2, d: 16.1 }
+};
+const STATE_COLS = 3, STATE_ROWS = 10;
+const CAP_COLS = 6, CAP_ROWS = 5;
+
+const $ = (sel) => document.querySelector(sel);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const normalizeAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const easeOutBack = (t) => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2);
+const easeOutBounce = (t) => {
+  const n1 = 7.5625, d1 = 2.75;
+  if (t < 1 / d1) return n1 * t * t;
+  if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75;
+  if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375;
+  return n1 * (t -= 2.625 / d1) * t + 0.984375;
+};
+
+/* ========================================================================== */
+/*  Audio engine                                                              */
+/* ========================================================================== */
+
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.master = null;
+    this.noise = null;
+    this.muted = false;
+  }
+  ensure() {
+    if (this.ctx) {
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      return;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    this.ctx = new AC();
+    this.master = this.ctx.createGain();
+    this.master.gain.value = 0.52;
+    this.master.connect(this.ctx.destination);
+    const len = Math.floor(this.ctx.sampleRate * 0.6);
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const ch = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+    this.noise = buf;
+  }
+  setMuted(m) {
+    this.muted = m;
+    if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.52, this.ctx.currentTime, 0.02);
+  }
+  click(strength = 1) {
+    if (!this.ctx || this.muted) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1180 * strength, t);
+    osc.frequency.exponentialRampToValueAtTime(410, t + 0.045);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.14 * strength, t + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.10);
+    osc.connect(gain).connect(this.master);
+    osc.start(t); osc.stop(t + 0.11);
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.noise;
+    const filt = this.ctx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.value = 2100;
+    filt.Q.value = 1.5;
+    const ng = this.ctx.createGain();
+    ng.gain.setValueAtTime(0.12 * strength, t);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.055);
+    src.connect(filt).connect(ng).connect(this.master);
+    src.start(t); src.stop(t + 0.07);
+  }
+  pickup() {
+    if (!this.ctx || this.muted) return;
+    this.click(0.45);
+  }
+  snap() {
+    if (!this.ctx || this.muted) return;
+    this.click(1.0);
+    const t = this.ctx.currentTime + 0.015;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(155, t);
+    osc.frequency.exponentialRampToValueAtTime(62, t + 0.18);
+    gain.gain.setValueAtTime(0.20, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    osc.connect(gain).connect(this.master);
+    osc.start(t); osc.stop(t + 0.24);
+  }
+  buzz() {
+    if (!this.ctx || this.muted) return;
+    const t = this.ctx.currentTime;
+    const filt = this.ctx.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.frequency.value = 620;
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.15, t + 0.012);
+    gain.gain.setValueAtTime(0.15, t + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.30);
+    filt.connect(gain).connect(this.master);
+    [88, 93, 122].forEach((f, i) => {
+      const osc = this.ctx.createOscillator();
+      osc.type = i === 2 ? 'square' : 'sawtooth';
+      osc.frequency.value = f;
+      osc.connect(filt);
+      osc.start(t); osc.stop(t + 0.31);
+    });
+  }
+  chime() {
+    if (!this.ctx || this.muted) return;
+    const t0 = this.ctx.currentTime + 0.02;
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((f, i) => {
+      const t = t0 + i * 0.085;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.075, t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.72);
+      osc.connect(gain).connect(this.master);
+      osc.start(t); osc.stop(t + 0.75);
+    });
+  }
+  victory() {
+    if (!this.ctx || this.muted) return;
+    const t0 = this.ctx.currentTime + 0.05;
+    const melody = [392, 523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98];
+    melody.forEach((f, i) => {
+      const t = t0 + i * 0.15;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = i > 4 ? 'triangle' : 'sine';
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.075, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+      osc.connect(gain).connect(this.master);
+      osc.start(t); osc.stop(t + 1.85);
+    });
+    const t = t0 + 0.1;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(98, t);
+    osc.frequency.exponentialRampToValueAtTime(49, t + 1.4);
+    gain.gain.setValueAtTime(0.14, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+    osc.connect(gain).connect(this.master);
+    osc.start(t); osc.stop(t + 1.55);
+  }
+}
+const sound = new SoundEngine();
+
+/* ========================================================================== */
+/*  Renderer, scene, camera                                                   */
+/* ========================================================================== */
+
+const sceneHost = $('#scene');
+let renderer, scene, camera, controls;
+const raycaster = new THREE.Raycaster();
+const pointerNdc = new THREE.Vector2();
+const activeTweens = new Map();
+
+let pieces = [];
+let pins = [];
+let pickables = [];
+const slotVisuals = new Map();
+const capPinsByState = new Map();
+let hoveredRef = null;
+let activeDrag = null;
+
+const game = {
+  started: false, finished: false, running: false,
+  elapsed: 0, startedAt: 0, states: 0, caps: 0,
+  completed: new Set(), factCount: 0, orbs: 0
+};
+
+let victoryOrbit = null;
+let victoryParticles = null;
+let victoryGlow = null;
+let victoryLight = null;
+let dust = null;
+let tableTop = null;
+
+/* ========================================================================== */
+/*  Small visual helpers                                                      */
+/* ========================================================================== */
+
+function roundedRectShape(w, h, r) {
+  const s = new THREE.Shape();
+  const x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y);
+  s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r);
+  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h);
+  s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r);
+  s.quadraticCurveTo(x, y, x + r, y);
+  return s;
+}
+
+function roundedRectPoints(w, h, r, seg = 8) {
+  const pts = [];
+  const x = -w / 2, y = -h / 2;
+  const corners = [
+    [x + w - r, y + r, -Math.PI / 2, 0],
+    [x + w - r, y + h - r, 0, Math.PI / 2],
+    [x + r, y + h - r, Math.PI / 2, Math.PI],
+    [x + r, y + r, Math.PI, Math.PI * 1.5]
+  ];
+  pts.push(new THREE.Vector2(x + r, y));
+  for (const [cx, cy, a0, a1] of corners) {
+    for (let i = 0; i <= seg; i++) {
+      const a = a0 + (a1 - a0) * (i / seg);
+      pts.push(new THREE.Vector2(cx + Math.cos(a) * r, cy + Math.sin(a) * r));
+    }
+  }
+  return pts;
+}
+
+function canvasPill(ctx, w, h, r, fill, stroke, lineWidth = 1) {
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(w - r, 0);
+  ctx.quadraticCurveTo(w, 0, w, r);
+  ctx.lineTo(w, h - r);
+  ctx.quadraticCurveTo(w, h, w - r, h);
+  ctx.lineTo(r, h);
+  ctx.quadraticCurveTo(0, h, 0, h - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lineWidth; ctx.stroke(); }
+}
+
+function makeTextureFromCanvas(canvas) {
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = renderer ? renderer.capabilities.getMaxAnisotropy() : 1;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function makeSprite(text, opts = {}) {
+  const {
+    fontSize = 46, padX = 20, padY = 11, height = 0.46,
+    color = '#f6ead7', bg = 'rgba(17,12,9,0.86)', border = 'rgba(226,190,133,0.34)',
+    weight = 650, radius = 14, letterSpacing = 0.4
+  } = opts;
+  const measure = document.createElement('canvas').getContext('2d');
+  const font = `${weight} ${fontSize}px "Avenir Next", "Segoe UI", sans-serif`;
+  measure.font = font;
+  const textW = Math.max(10, Math.ceil(measure.measureText(text).width + letterSpacing * text.length));
+  const c = document.createElement('canvas');
+  c.width = Math.ceil(textW + padX * 2);
+  c.height = Math.ceil(fontSize + padY * 2);
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  if (bg) canvasPill(ctx, c.width, c.height, radius, bg, border, 2);
+  ctx.font = font;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  if (border) {
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
+  }
+  ctx.fillText(text, c.width / 2, c.height / 2 + 1);
+  const tex = makeTextureFromCanvas(c);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(height * (c.width / c.height), height, 1);
+  sprite.renderOrder = 12;
+  return sprite;
+}
+
+function makeFlatLabel(text, opts = {}) {
+  const {
+    height = 0.55, fontSize = 68, padX = 22, padY = 12,
+    color = 'rgba(246,234,215,0.92)', bg = null, border = null,
+    weight = 700, tracking = 2, uppercase = false, maxWidth = 0
+  } = opts;
+  const label = uppercase ? text.toUpperCase() : text;
+  const measure = document.createElement('canvas').getContext('2d');
+  const font = `${weight} ${fontSize}px "Iowan Old Style", "Palatino Linotype", Georgia, serif`;
+  measure.font = font;
+  const rawW = Math.ceil(measure.measureText(label).width + tracking * label.length);
+  const c = document.createElement('canvas');
+  c.width = Math.ceil(rawW + padX * 2);
+  c.height = Math.ceil(fontSize + padY * 2);
+  const ctx = c.getContext('2d');
+  if (bg) canvasPill(ctx, c.width, c.height, c.height * 0.35, bg, border || 'rgba(226,190,133,0.32)', 2);
+  ctx.font = font;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.62)';
+  ctx.shadowBlur = 7;
+  ctx.shadowOffsetY = 2;
+  if (tracking) {
+    const total = rawW;
+    let x = (c.width - total) / 2;
+    for (const ch of label) {
+      const cw = ctx.measureText(ch).width + tracking;
+      ctx.fillText(ch, x + cw / 2 - tracking / 2, c.height / 2 + 2);
+      x += cw;
+    }
+  } else {
+    ctx.fillText(label, c.width / 2, c.height / 2 + 2);
+  }
+  const tex = makeTextureFromCanvas(c);
+  let w = height * (c.width / c.height);
+  if (maxWidth && w > maxWidth) w = maxWidth;
+  const geo = new THREE.PlaneGeometry(w, height);
+  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.renderOrder = 7;
+  return mesh;
+}
+
+function createWoodTexture() {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 1024;
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 1024, 1024);
+  g.addColorStop(0, '#4a2a1a');
+  g.addColorStop(0.35, '#3b2013');
+  g.addColorStop(0.65, '#452618');
+  g.addColorStop(1, '#2b170e');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 1024, 1024);
+
+  for (let i = 0; i < 260; i++) {
+    const y = Math.random() * 1024;
+    const amp = 5 + Math.random() * 22;
+    const freq = 0.002 + Math.random() * 0.006;
+    ctx.beginPath();
+    for (let x = -20; x <= 1044; x += 12) {
+      const yy = y + Math.sin(x * freq + i) * amp + Math.sin(x * 0.018 + i * 2.1) * 3;
+      if (x === -20) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+    }
+    const light = Math.random() > 0.5;
+    ctx.strokeStyle = light
+      ? `rgba(150,98,58,${0.018 + Math.random() * 0.06})`
+      : `rgba(18,8,4,${0.025 + Math.random() * 0.07})`;
+    ctx.lineWidth = 0.6 + Math.random() * 2.8;
+    ctx.stroke();
+  }
+
+  for (let k = 0; k < 5; k++) {
+    const x = Math.random() * 1024, y = Math.random() * 1024;
+    for (let r = 4; r < 34; r += 3) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, r * 1.6, r * 0.55, Math.random() * 0.4, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(20,9,4,${0.08 - r * 0.0015})`;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+  }
+
+  const tex = makeTextureFromCanvas(c);
+  tex.wrapS = THREE.MirroredRepeatWrapping;
+  tex.wrapT = THREE.MirroredRepeatWrapping;
+  tex.repeat.set(1, 1);
+  return tex;
+}
+
+function createFeltTexture(base = '#192521', fleck = 'rgba(190,215,190,0.10)') {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 14000; i++) {
+    ctx.fillStyle = Math.random() > 0.5 ? fleck : 'rgba(0,0,0,0.045)';
+    const s = Math.random() > 0.85 ? 1.6 : 0.8;
+    ctx.fillRect(Math.random() * 512, Math.random() * 512, s, s);
+  }
+  for (let i = 0; i < 90; i++) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.015)';
+    ctx.beginPath();
+    const y = Math.random() * 512;
+    ctx.moveTo(0, y); ctx.lineTo(512, y + (Math.random() - 0.5) * 7);
+    ctx.stroke();
+  }
+  const tex = makeTextureFromCanvas(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(4, 4);
+  return tex;
+}
+
+function createMapPlateTexture() {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 640;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(500, 280, 20, 500, 280, 600);
+  g.addColorStop(0, '#173b3c');
+  g.addColorStop(0.55, '#0e2b2e');
+  g.addColorStop(1, '#071b1e');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 1024, 640);
+
+  ctx.strokeStyle = 'rgba(151,200,193,0.045)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= 1024; x += 64) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 640); ctx.stroke();
+  }
+  for (let y = 0; y <= 640; y += 64) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1024, y); ctx.stroke();
+  }
+  for (let i = 0; i < 1000; i++) {
+    ctx.fillStyle = `rgba(191,224,214,${Math.random() * 0.035})`;
+    ctx.fillRect(Math.random() * 1024, Math.random() * 640, 1, 1);
+  }
+  const tex = makeTextureFromCanvas(c);
+  return tex;
+}
+
+function createGlowTexture() {
+  const c = document.createElement('canvas');
+  c.width = 64; c.height = 64;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,235,190,1)');
+  g.addColorStop(0.28, 'rgba(255,212,130,0.62)');
+  g.addColorStop(1, 'rgba(255,190,90,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 64, 64);
+  return makeTextureFromCanvas(c);
+}
+
+/* ========================================================================== */
+/*  Tween helpers                                                             */
+/* ========================================================================== */
+
+function animateTag(tag, duration, onUpdate, ease = easeOutCubic, onComplete = null) {
+  if (activeTweens.has(tag)) activeTweens.delete(tag);
+  activeTweens.set(tag, { elapsed: 0, duration: Math.max(0.0001, duration), onUpdate, ease, onComplete });
+}
+function killTag(tag) { activeTweens.delete(tag); }
+function updateTweens(dt) {
+  for (const [tag, tw] of activeTweens) {
+    tw.elapsed += dt;
+    const p = clamp(tw.elapsed / tw.duration, 0, 1);
+    tw.onUpdate(tw.ease(p), p);
+    if (p >= 1) {
+      activeTweens.delete(tag);
+      if (tw.onComplete) tw.onComplete();
+    }
+  }
+}
+
+function tweenVec3(tag, obj, target, duration, ease, onComplete) {
+  const from = obj.clone();
+  animateTag(tag, duration, (p) => {
+    obj.set(lerp(from.x, target.x, p), lerp(from.y, target.y, p), lerp(from.z, target.z, p));
+  }, ease, onComplete);
+}
+
+function tweenNumber(tag, from, to, duration, apply, ease = easeOutCubic, onComplete = null) {
+  animateTag(tag, duration, (p) => apply(lerp(from, to, p)), ease, onComplete);
+}
+
+function tweenYaw(tag, obj, target, duration, ease = easeOutCubic, onComplete = null) {
+  const from = obj.rotation.y;
+  const diff = normalizeAngle(target - from);
+  animateTag(tag, duration, (p) => { obj.rotation.y = from + diff * p; }, ease, onComplete);
+}
+
+/* ========================================================================== */
+/*  Scene construction                                                        */
+/* ========================================================================== */
+
+function init() {
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.01;
+  renderer.domElement.setAttribute('aria-label', '3D puzzle table');
+  sceneHost.appendChild(renderer.domElement);
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x120b07);
+  scene.fog = new THREE.FogExp2(0x120b07, 0.0038);
+
+  camera = new THREE.PerspectiveCamera(
+    fovForAspect(window.innerWidth / Math.max(1, window.innerHeight)),
+    window.innerWidth / Math.max(1, window.innerHeight), 0.1, 300
+  );
+  const overview = getOverviewPose();
+  camera.position.copy(overview.pos);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.copy(overview.target);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.065;
+  controls.rotateSpeed = 0.62;
+  controls.panSpeed = 0.72;
+  controls.zoomSpeed = 0.85;
+  controls.minDistance = 12;
+  controls.maxDistance = 112;
+  controls.minPolarAngle = 0.18;
+  controls.maxPolarAngle = 1.36;
+  controls.screenSpacePanning = true;
+  controls.update();
+
+  setupLights();
+  buildTable();
+  buildMapBase();
+  buildDocks();
+  buildPieces();
+  buildPins();
+  buildDust();
+  setupEvents();
+
+  window.__USMAP_LOADED = true;
+  requestAnimationFrame(() => {
+    const loader = $('#loader');
+    if (loader) loader.classList.add('hide');
+    if (!game.started) openWelcome(false);
+  });
+  animate(performance.now());
+}
+
+function fovForAspect(aspect) {
+  if (aspect < 0.72) return 54;
+  if (aspect < 1.1) return 44;
+  return 38;
+}
+
+function getOverviewPose() {
+  const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+  const target = new THREE.Vector3(0, 0, 4);
+  if (aspect < 0.72) {
+    // Portrait screens: pull back far enough to keep both piece trays in view.
+    // The layout is left-heavy (state tray to the west), so shift the target
+    // to the centre of the whole arrangement rather than the map centre.
+    const fov = fovForAspect(aspect);
+    const distance = 76 / (2 * Math.tan((fov * Math.PI / 180) / 2) * aspect);
+    const elevation = 52 * Math.PI / 180;
+    target.set(-7.5, 0, 4);
+    return {
+      pos: new THREE.Vector3(target.x, target.y + distance * Math.sin(elevation), target.z + distance * Math.cos(elevation)),
+      target
+    };
+  }
+  if (aspect < 1.35) return { pos: new THREE.Vector3(0, 68, 66), target };
+  return { pos: new THREE.Vector3(0, 61, 60), target };
+}
+
+function setupLights() {
+  scene.add(new THREE.HemisphereLight(0xffe0b8, 0x20120c, 0.56));
+  scene.add(new THREE.AmbientLight(0xffd9a8, 0.15));
+
+  const key = new THREE.SpotLight(0xffe0b5, 3700, 145, 0.82, 0.72, 1.25);
+  key.position.set(-8, 62, 30);
+  key.target.position.set(0, 0, 1);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.near = 10;
+  key.shadow.camera.far = 150;
+  key.shadow.bias = -0.00035;
+  key.shadow.normalBias = 0.035;
+  scene.add(key); scene.add(key.target);
+
+  const fill = new THREE.DirectionalLight(0xbfd5dc, 0.55);
+  fill.position.set(34, 28, -30);
+  scene.add(fill);
+
+  const rim = new THREE.DirectionalLight(0xffa968, 0.42);
+  rim.position.set(-36, 18, -14);
+  scene.add(rim);
+
+  const win = new THREE.PointLight(0xffc987, 28, 50, 2);
+  win.position.set(26, 13, 34);
+  scene.add(win);
+  const win2 = new THREE.PointLight(0x87b6b1, 16, 45, 2);
+  win2.position.set(-30, 11, -28);
+  scene.add(win2);
+}
+
+function buildTable() {
+  const wood = createWoodTexture();
+  const tableGeo = new THREE.PlaneGeometry(78, 64, 1, 1);
+  const tableMat = new THREE.MeshStandardMaterial({ map: wood, roughness: 0.52, metalness: 0.10 });
+  const table = new THREE.Mesh(tableGeo, tableMat);
+  table.rotation.x = -Math.PI / 2;
+  table.position.y = 0;
+  table.receiveShadow = true;
+  scene.add(table);
+  tableTop = table;
+
+  // A dark metal edge beyond the wood, then the void.
+  const base = new THREE.Mesh(
+    new THREE.PlaneGeometry(300, 300),
+    new THREE.MeshStandardMaterial({ color: 0x0c0705, roughness: 0.95 })
+  );
+  base.rotation.x = -Math.PI / 2;
+  base.position.y = -0.22;
+  scene.add(base);
+
+  const borderPts = roundedRectPoints(78, 64, 0.9, 14);
+  const borderGeo = new THREE.BufferGeometry().setFromPoints(
+    borderPts.map(p => new THREE.Vector3(p.x, 0.015, p.y))
+  );
+  const border = new THREE.LineLoop(borderGeo, new THREE.LineBasicMaterial({
+    color: 0xd6ad6d, transparent: true, opacity: 0.24
+  }));
+  scene.add(border);
+
+  // Candle-warm pools of light on the table.
+  const glowTex = createGlowTexture();
+  const glowMat = new THREE.MeshBasicMaterial({
+    map: glowTex, transparent: true, blending: THREE.AdditiveBlending,
+    depthWrite: false, opacity: 0.11
+  });
+  [[0, 3, 28, 28], [-29, -18, 20, 20], [29, -20, 18, 18]].forEach(([x, z, w, h]) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), glowMat);
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(x, 0.025, z);
+    m.renderOrder = 2;
+    scene.add(m);
+  });
+
+  // A tarnished brass compass in the open right-hand corner.
+  const compass = buildCompass();
+  compass.position.set(22.6, 0.035, -6.3);
+  scene.add(compass);
+}
+
+function buildCompass() {
+  const g = new THREE.Group();
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext('2d');
+  ctx.translate(256, 256);
+  ctx.strokeStyle = 'rgba(217,173,104,0.48)';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, 0, 226, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(217,173,104,0.24)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(0, 0, 198, 0, Math.PI * 2); ctx.stroke();
+  for (let i = 0; i < 64; i++) {
+    const a = (i / 64) * Math.PI * 2;
+    const long = i % 8 === 0;
+    ctx.strokeStyle = long ? 'rgba(235,201,143,0.62)' : 'rgba(217,173,104,0.26)';
+    ctx.lineWidth = long ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * (long ? 164 : 182), Math.sin(a) * (long ? 164 : 182));
+    ctx.lineTo(Math.cos(a) * 196, Math.sin(a) * 196);
+    ctx.stroke();
+  }
+  // star rose
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 - Math.PI / 2;
+    const long = i % 2 === 0;
+    ctx.save();
+    ctx.rotate(a);
+    ctx.beginPath();
+    ctx.moveTo(0, -168);
+    ctx.lineTo(long ? 17 : 10, 0);
+    ctx.lineTo(0, long ? 90 : 58);
+    ctx.lineTo(long ? -17 : -10, 0);
+    ctx.closePath();
+    ctx.fillStyle = long ? 'rgba(231,193,129,0.38)' : 'rgba(217,173,104,0.18)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(235,201,143,0.50)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+  }
+  ctx.fillStyle = 'rgba(240,208,151,0.78)';
+  ctx.font = '700 24px "Iowan Old Style", Georgia, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('N', 0, -212);
+  ctx.font = '600 16px "Avenir Next", sans-serif';
+  ctx.fillStyle = 'rgba(217,173,104,0.55)';
+  ctx.fillText('ATLAS', 0, 238);
+  const tex = makeTextureFromCanvas(c);
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(5.6, 5.6),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.82 })
+  );
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.renderOrder = 3;
+  g.add(mesh);
+  return g;
+}
+
+function buildMapBase() {
+  const group = new THREE.Group();
+  scene.add(group);
+
+  // The semi-transparent recessed plate.
+  const plateTex = createMapPlateTexture();
+  const plate = new THREE.Mesh(
+    new THREE.PlaneGeometry(33.1, 20.9),
+    new THREE.MeshPhysicalMaterial({
+      map: plateTex, transparent: true, opacity: 0.86, roughness: 0.38,
+      metalness: 0.18, clearcoat: 0.7, clearcoatRoughness: 0.3,
+      color: 0xcfd8d1
+    })
+  );
+  plate.rotation.x = -Math.PI / 2;
+  plate.position.y = 0.08;
+  plate.renderOrder = 1;
+  group.add(plate);
+
+  // A very subtle inner shadow ring.
+  const shadowTex = createGlowTexture();
+  const shadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(40, 27),
+    new THREE.MeshBasicMaterial({ map: shadowTex, color: 0x000000, transparent: true, opacity: 0.35, depthWrite: false })
+  );
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = 0.05;
+  group.add(shadow);
+
+  // Carved mahogany rim with a carved opening.
+  const outer = roundedRectShape(35.6, 23.2, 1.35);
+  const holeShape = roundedRectShape(33.0, 20.8, 0.9);
+  const hole = new THREE.Path(holeShape.getPoints(32));
+  outer.holes.push(hole);
+  const rimGeo = new THREE.ExtrudeGeometry(outer, {
+    depth: 0.42, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.07,
+    bevelSegments: 2, curveSegments: 18
+  });
+  rimGeo.rotateX(-Math.PI / 2);
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0x3a2014, roughness: 0.38, metalness: 0.18 });
+  const rim = new THREE.Mesh(rimGeo, rimMat);
+  rim.position.y = 0.05;
+  rim.castShadow = true;
+  rim.receiveShadow = true;
+  group.add(rim);
+
+  const trimPts = roundedRectPoints(33.0, 20.8, 0.9, 12);
+  const trim = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints(trimPts.map(p => new THREE.Vector3(p.x, 0.48, p.y))),
+    new THREE.LineBasicMaterial({ color: 0xe2bd7e, transparent: true, opacity: 0.55 })
+  );
+  group.add(trim);
+
+  const title = makeFlatLabel('THE UNITED STATES OF AMERICA', {
+    height: 0.43, fontSize: 60, color: 'rgba(235,201,143,0.70)', tracking: 6,
+    padX: 10, padY: 4, weight: 600
+  });
+  title.position.set(0, 0.48, -11.05);
+  group.add(title);
+
+  const subTitle = makeFlatLabel('ATLAS PUZZLE  ·  STATES & CAPITALS', {
+    height: 0.22, fontSize: 40, color: 'rgba(201,185,159,0.50)', tracking: 4,
+    padX: 8, padY: 2, weight: 600
+  });
+  subTitle.position.set(0, 0.48, 11.05);
+  group.add(subTitle);
+
+  // All 48 contiguous states remain visible. The eighteen states outside
+  // the playable set are rendered as muted inlays so the finished map reads
+  // as a whole country rather than a board full of holes.
+  const decorMat = new THREE.LineBasicMaterial({ color: 0x9fc2bb, transparent: true, opacity: 0.17 });
+  DATA.decor.forEach((d, di) => {
+    const tint = new THREE.Color().setHSL(0.31 + (di % 5) * 0.018, 0.16, 0.34);
+    const fillMat = new THREE.MeshBasicMaterial({
+      color: tint, transparent: true, opacity: 0.24,
+      depthWrite: false, side: THREE.DoubleSide
+    });
+    for (const poly of d.polys) {
+      const shape = new THREE.Shape();
+      shape.setFromPoints(poly.map(([x, z]) => new THREE.Vector2(x, -z)));
+      const fill = new THREE.Mesh(new THREE.ShapeGeometry(shape), fillMat);
+      fill.rotation.x = -Math.PI / 2;
+      fill.position.y = 0.116;
+      fill.renderOrder = 2;
+      group.add(fill);
+      const pts = poly.map(([x, z]) => new THREE.Vector3(x, 0.132, z));
+      if (pts.length > 2) group.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), decorMat));
+    }
+  });
+
+  // Target slots & labels for the playable states.
+  for (const st of STATES) {
+    const slotGroup = new THREE.Group();
+    const shapes = [];
+    for (const poly of st.polys) {
+      const shape = new THREE.Shape();
+      const pts = poly.map(([x, z]) => new THREE.Vector2(x, -z));
+      shape.setFromPoints(pts);
+      shapes.push(shape);
+      const fill = new THREE.Mesh(
+        new THREE.ShapeGeometry(shape),
+        new THREE.MeshBasicMaterial({
+          color: st.color, transparent: true, opacity: 0.145,
+          depthWrite: false, side: THREE.DoubleSide
+        })
+      );
+      fill.rotation.x = -Math.PI / 2;
+      fill.position.y = 0.125;
+      fill.renderOrder = 2;
+      slotGroup.add(fill);
+      if (!slotVisuals.has(st.id)) slotVisuals.set(st.id, {});
+      slotVisuals.get(st.id).fill = fill;
+
+      const linePts = poly.map(([x, z]) => new THREE.Vector3(x, 0.155, z));
+      slotGroup.add(new THREE.LineLoop(
+        new THREE.BufferGeometry().setFromPoints(linePts),
+        new THREE.LineBasicMaterial({ color: st.color, transparent: true, opacity: 0.62 })
+      ));
+    }
+
+    const capDot = new THREE.Mesh(
+      new THREE.RingGeometry(0.11, 0.19, 20),
+      new THREE.MeshBasicMaterial({ color: 0xe8c384, transparent: true, opacity: 0.46, side: THREE.DoubleSide, depthWrite: false })
+    );
+    capDot.rotation.x = -Math.PI / 2;
+    capDot.position.set(st.capitalPt[0], 0.175, st.capitalPt[1]);
+    capDot.renderOrder = 4;
+    slotGroup.add(capDot);
+
+    const maxDim = Math.max(
+      ...st.polys.map(poly => {
+        const xs = poly.map(p => p[0]), zs = poly.map(p => p[1]);
+        return Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs));
+      })
+    );
+    const label = makeFlatLabel(st.id, {
+      height: 0.58, fontSize: 70, color: 'rgba(244,230,203,0.84)',
+      tracking: 2, padX: 2, padY: 2, weight: 700
+    });
+    label.position.set(st.center[0], 0.195, st.center[1]);
+    slotGroup.add(label);
+
+    const haloR = clamp(maxDim * 0.55, 0.9, 2.5);
+    const halo = new THREE.Mesh(
+      new THREE.RingGeometry(haloR * 0.82, haloR, 40),
+      new THREE.MeshBasicMaterial({
+        color: 0xf2cd8c, transparent: true, opacity: 0, side: THREE.DoubleSide,
+        depthWrite: false, blending: THREE.AdditiveBlending
+      })
+    );
+    halo.rotation.x = -Math.PI / 2;
+    halo.position.set(st.anchor[0], 0.225, st.anchor[1]);
+    halo.renderOrder = 5;
+    slotGroup.add(halo);
+
+    group.add(slotGroup);
+    const vis = slotVisuals.get(st.id);
+    vis.label = label;
+    vis.halo = halo;
+    vis.capDot = capDot;
+    vis.defaultFill = 0.145;
+  }
+}
+
+function buildDocks() {
+  const feltTex = createFeltTexture('#17231f', 'rgba(185,210,188,0.085)');
+  const feltMat = new THREE.MeshStandardMaterial({ map: feltTex, color: 0x9aaea0, roughness: 0.92, metalness: 0.02 });
+  const feltTex2 = createFeltTexture('#1a1b22', 'rgba(190,200,220,0.075)');
+  const feltMat2 = new THREE.MeshStandardMaterial({ map: feltTex2, color: 0x9299aa, roughness: 0.94, metalness: 0.02 });
+
+  for (const [key, mat] of [['state', feltMat], ['capital', feltMat2]]) {
+    const t = TRAY[key];
+    const board = new THREE.Mesh(new THREE.ShapeGeometry(roundedRectShape(t.w, t.d, 1.0)), mat);
+    board.rotation.x = -Math.PI / 2;
+    board.position.set(t.cx, 0.075, t.cz);
+    board.receiveShadow = true;
+    board.renderOrder = 1;
+    scene.add(board);
+
+    const trim = new THREE.LineLoop(
+      new THREE.BufferGeometry().setFromPoints(roundedRectPoints(t.w, t.d, 1.0, 10).map(p => new THREE.Vector3(t.cx + p.x, 0.09, t.cz + p.y))),
+      new THREE.LineBasicMaterial({ color: 0xd9ad68, transparent: true, opacity: 0.28 })
+    );
+    scene.add(trim);
+
+    const inner = new THREE.LineLoop(
+      new THREE.BufferGeometry().setFromPoints(roundedRectPoints(t.w - 0.5, t.d - 0.5, 0.8, 10).map(p => new THREE.Vector3(t.cx + p.x, 0.092, t.cz + p.y))),
+      new THREE.LineBasicMaterial({ color: 0xd9ad68, transparent: true, opacity: 0.10 })
+    );
+    scene.add(inner);
+  }
+
+  const stateHeader = makeFlatLabel('STATE BLOCKS', {
+    height: 0.44, fontSize: 60, color: 'rgba(235,201,143,0.78)', tracking: 5,
+    padX: 2, padY: 2, weight: 700
+  });
+  stateHeader.position.set(TRAY.state.cx, 0.10, TRAY.state.cz - 18.15);
+  scene.add(stateHeader);
+
+  const stateSub = makeFlatLabel('DRAG TO THE MAP', {
+    height: 0.20, fontSize: 40, color: 'rgba(201,185,159,0.46)', tracking: 4,
+    padX: 2, padY: 2, weight: 600
+  });
+  stateSub.position.set(TRAY.state.cx, 0.10, TRAY.state.cz - 17.36);
+  scene.add(stateSub);
+
+  const capHeader = makeFlatLabel('CAPITAL PINS', {
+    height: 0.40, fontSize: 60, color: 'rgba(235,201,143,0.78)', tracking: 5,
+    padX: 2, padY: 2, weight: 700
+  });
+  capHeader.position.set(TRAY.capital.cx, 0.10, TRAY.capital.cz + 7.25);
+  scene.add(capHeader);
+
+  const capSub = makeFlatLabel('ONLY ONTO A PLACED STATE', {
+    height: 0.18, fontSize: 38, color: 'rgba(201,185,159,0.46)', tracking: 4,
+    padX: 2, padY: 2, weight: 600
+  });
+  capSub.position.set(TRAY.capital.cx, 0.10, TRAY.capital.cz + 6.52);
+  scene.add(capSub);
+
+  // Empty-slot markers.
+  const slotMat = new THREE.MeshBasicMaterial({ color: 0xd9ad68, transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false });
+  for (let i = 0; i < TOTAL; i++) {
+    const p = stateDockPosition(i);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.34, 0.42, 22), slotMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(p.x, 0.095, p.z);
+    scene.add(ring);
+  }
+  for (let i = 0; i < TOTAL; i++) {
+    const p = capitalDockPosition(i);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.30, 0.37, 22), slotMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(p.x, 0.095, p.z);
+    scene.add(ring);
+  }
+}
+
+function stateDockPosition(index) {
+  const col = index % STATE_COLS;
+  const row = Math.floor(index / STATE_COLS);
+  return {
+    x: TRAY.state.cx + (col - (STATE_COLS - 1) / 2) * 4.05,
+    z: TRAY.state.cz - 15.75 + row * 3.5
+  };
+}
+function capitalDockPosition(index) {
+  const col = index % CAP_COLS;
+  const row = Math.floor(index / CAP_COLS);
+  return {
+    x: TRAY.capital.cx + (col - (CAP_COLS - 1) / 2) * 4.22,
+    z: TRAY.capital.cz - 5.62 + row * 2.62
+  };
+}
+
+/* ========================================================================== */
+/*  State pieces                                                              */
+/* ========================================================================== */
+
+function buildPieces() {
+  const proxyMat = new THREE.MeshBasicMaterial({
+    transparent: true, opacity: 0, depthWrite: false, colorWrite: false, side: THREE.DoubleSide
+  });
+
+  STATES.forEach((st, index) => {
+    const group = new THREE.Group();
+    const topMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(st.color), roughness: 0.56, metalness: 0.06,
+      emissive: new THREE.Color(st.color), emissiveIntensity: 0.045
+    });
+    const sideColor = new THREE.Color(st.color).multiplyScalar(0.58);
+    const sideMat = new THREE.MeshStandardMaterial({
+      color: sideColor, roughness: 0.72, metalness: 0.04
+    });
+
+    let maxDim = 1;
+    const allXs = [], allZs = [];
+    for (const poly of st.polys) {
+      for (const [x, z] of poly) { allXs.push(x); allZs.push(z); }
+    }
+    maxDim = Math.max(Math.max(...allXs) - Math.min(...allXs), Math.max(...allZs) - Math.min(...allZs));
+
+    for (const poly of st.polys) {
+      const shape = new THREE.Shape();
+      shape.setFromPoints(poly.map(([x, z]) => new THREE.Vector2(x - st.anchor[0], -(z - st.anchor[1]))));
+      const geo = new THREE.ExtrudeGeometry(shape, {
+        depth: PIECE_DEPTH - 0.12,
+        bevelEnabled: true,
+        bevelThickness: 0.06,
+        bevelSize: 0.055,
+        bevelSegments: 2,
+        curveSegments: 2,
+        steps: 1
+      });
+      geo.rotateX(-Math.PI / 2);
+      geo.translate(0, 0.06, 0);
+      const mesh = new THREE.Mesh(geo, [topMat, sideMat]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      group.add(mesh);
+
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(geo, 32),
+        new THREE.LineBasicMaterial({ color: 0x20140d, transparent: true, opacity: 0.30 })
+      );
+      group.add(edges);
+
+      // Generous invisible pick target per polygon.
+      const xs = poly.map(p => p[0]), zs = poly.map(p => p[1]);
+      const pcx = (Math.max(...xs) + Math.min(...xs)) / 2 - st.anchor[0];
+      const pcz = (Math.max(...zs) + Math.min(...zs)) / 2 - st.anchor[1];
+      const radius = Math.max(0.55, Math.min(2.8, Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) * 0.48));
+      const proxy = new THREE.Mesh(new THREE.CircleGeometry(radius, 18), proxyMat.clone());
+      proxy.rotation.x = -Math.PI / 2;
+      proxy.position.set(pcx, PIECE_DEPTH + 0.10, pcz);
+      group.add(proxy);
+    }
+
+    const label = makeFlatLabel(st.id, {
+      height: 0.46, fontSize: 74, color: 'rgba(28,18,10,0.82)', bg: 'rgba(250,239,217,0.88)',
+      border: 'rgba(40,25,14,0.14)', tracking: 2, padX: 18, padY: 10, weight: 700, maxWidth: 1.4
+    });
+    label.position.set(st.center[0] - st.anchor[0], PIECE_DEPTH + 0.012, st.center[1] - st.anchor[1]);
+    label.renderOrder = 8;
+    group.add(label);
+
+    // Capital socket: a dark recessed well with a brass collar.
+    const localCapX = st.capitalPt[0] - st.anchor[0];
+    const localCapZ = st.capitalPt[1] - st.anchor[1];
+    const socket = new THREE.Group();
+    socket.position.set(localCapX, PIECE_DEPTH + 0.002, localCapZ);
+    const well = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.21, 0.21, 0.045, 24),
+      new THREE.MeshStandardMaterial({ color: 0x120d09, roughness: 0.95, metalness: 0.1 })
+    );
+    well.position.y = 0.02;
+    socket.add(well);
+    const collar = new THREE.Mesh(
+      new THREE.TorusGeometry(0.30, 0.038, 10, 30),
+      new THREE.MeshStandardMaterial({ color: 0xd6ad6d, roughness: 0.32, metalness: 0.72, emissive: 0x3b2810, emissiveIntensity: 0.4 })
+    );
+    collar.rotation.x = -Math.PI / 2;
+    collar.position.y = 0.045;
+    socket.add(collar);
+    group.add(socket);
+
+    const dock = stateDockPosition(index);
+    const baseDockScale = Math.min(2.82 / Math.max(maxDim, 1.1), 0.86);
+    const yaw = index % 3 === 1 ? -Math.PI / 4 : 0;
+    const dockScale = baseDockScale * (yaw === 0 ? 1 : 0.72);
+
+    group.position.set(dock.x, DOCK_Y, dock.z);
+    group.scale.setScalar(dockScale);
+    group.rotation.y = yaw;
+    group.userData.pieceId = st.id;
+
+    const piece = {
+      kind: 'state', data: st, group, topMat, sideMat, label, socket,
+      collar, dock, dockScale, baseDockScale, baseYaw: yaw, state: 'dock', proxyList: [],
+      socketRing: collar, maxDim
+    };
+
+    for (const child of group.children) {
+      if (child.isMesh && child.material && child.material.colorWrite === false) {
+        child.userData.kind = 'state';
+        child.userData.ref = piece;
+        piece.proxyList.push(child);
+        pickables.push(child);
+      }
+    }
+
+    group.traverse((o) => {
+      if (o.isMesh || o.isLineSegments) { o.castShadow = o.isMesh; }
+    });
+
+    pieces.push(piece);
+    scene.add(group);
+  });
+}
+
+/* ========================================================================== */
+/*  Capital pins                                                              */
+/* ========================================================================== */
+
+function buildPins() {
+  const brass = new THREE.MeshStandardMaterial({ color: 0xd2a45e, metalness: 0.78, roughness: 0.26, emissive: 0x3a270f, emissiveIntensity: 0.25 });
+  const darkMetal = new THREE.MeshStandardMaterial({ color: 0x3c2a18, metalness: 0.6, roughness: 0.44 });
+  const ivory = new THREE.MeshStandardMaterial({ color: 0xf2dfb8, metalness: 0.16, roughness: 0.34, emissive: 0x4a3515, emissiveIntensity: 0.20 });
+  const proxyMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false });
+
+  STATES.forEach((st, index) => {
+    const group = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.30, 0.35, 0.09, 26), darkMetal);
+    base.position.y = 0.045;
+    base.castShadow = true;
+    group.add(base);
+
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.025, 8, 30), brass);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.095;
+    group.add(ring);
+
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.075, 0.34, 12), brass);
+    stem.position.y = 0.28;
+    stem.castShadow = true;
+    group.add(stem);
+
+    const collar2 = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.025, 8, 20), brass);
+    collar2.rotation.x = -Math.PI / 2;
+    collar2.position.y = 0.455;
+    group.add(collar2);
+
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.235, 24, 16), ivory.clone());
+    dome.position.y = 0.58;
+    dome.castShadow = true;
+    group.add(dome);
+
+    const label = makeSprite(st.capital, {
+      fontSize: 52, height: 0.56, padX: 18, padY: 10,
+      color: '#f3dfba', bg: 'rgba(17,12,9,0.88)', border: 'rgba(226,190,133,0.38)',
+      weight: 650
+    });
+    label.position.set(0, 1.08, 0);
+    group.add(label);
+
+    const proxy = new THREE.Mesh(new THREE.SphereGeometry(0.72, 10, 8), proxyMat.clone());
+    proxy.position.y = 0.48;
+    group.add(proxy);
+
+    const dock = capitalDockPosition(index);
+    group.position.set(dock.x, 0.20, dock.z);
+    group.userData.pinId = st.id;
+
+    const pin = {
+      kind: 'pin', data: st, group, dome, label, dock, state: 'dock', proxy,
+      homeScale: 0.92, socketOwner: null, labelBaseScale: label.scale.clone()
+    };
+    proxy.userData.kind = 'pin';
+    proxy.userData.ref = pin;
+    pickables.push(proxy);
+
+    pins.push(pin);
+    capPinsByState.set(st.id, pin);
+    scene.add(group);
+  });
+}
+
+/* ========================================================================== */
+/*  Atmosphere                                                                */
+/* ========================================================================== */
+
+function buildDust() {
+  const count = 180;
+  const pos = new Float32Array(count * 3);
+  const seed = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    pos[i * 3] = (Math.random() - 0.5) * 82;
+    pos[i * 3 + 1] = 2 + Math.random() * 30;
+    pos[i * 3 + 2] = (Math.random() - 0.5) * 66;
+    seed[i] = Math.random() * Math.PI * 2;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({
+    color: 0xffd9a1, size: 0.10, transparent: true, opacity: 0.42,
+    depthWrite: false, blending: THREE.AdditiveBlending, map: createGlowTexture(),
+    sizeAttenuation: true
+  });
+  dust = new THREE.Points(geo, mat);
+  dust.userData.seed = seed;
+  scene.add(dust);
+}
+
+/* ========================================================================== */
+/*  Interaction                                                               */
+/* ========================================================================== */
+
+function setupEvents() {
+  const dom = renderer.domElement;
+  dom.addEventListener('pointerdown', onPointerDown);
+  dom.addEventListener('pointermove', onPointerMove);
+  dom.addEventListener('pointerup', onPointerUp);
+  dom.addEventListener('pointercancel', onPointerUp);
+  dom.addEventListener('pointerleave', () => {
+    hideTooltip();
+    if (!activeDrag) setHoverEmissive(null);
+  });
+  dom.addEventListener('dblclick', onDoubleClick);
+  dom.addEventListener('contextmenu', (e) => e.preventDefault());
+  window.addEventListener('resize', onResize);
+  window.addEventListener('keydown', onKeyDown);
+
+  $('#beginBtn').addEventListener('click', beginGame);
+  $('#resumeBtn').addEventListener('click', closeWelcome);
+  $('#helpBtn').addEventListener('click', () => openWelcome(true));
+  $('#scrambleBtn').addEventListener('click', () => {
+    sound.ensure();
+    resetBoard(true);
+    setHint('Table scrambled. Every state is back in the tray.', 'warn');
+    showToast('Scramble complete — the timer has been reset.', 'info');
+  });
+  $('#soundBtn').addEventListener('click', toggleSound);
+  $('#overviewBtn').addEventListener('click', () => flyCamera(getOverviewPose(), 1.15));
+  $('#mapViewBtn').addEventListener('click', () => flyCamera({
+    pos: new THREE.Vector3(0, 32, 25.5), target: new THREE.Vector3(0, 0, 0)
+  }, 1.05));
+  $('#stateTrayBtn').addEventListener('click', () => flyCamera({
+    pos: new THREE.Vector3(TRAY.state.cx + 5, 35, 27), target: new THREE.Vector3(TRAY.state.cx, 0, 0)
+  }, 1.05));
+  $('#capTrayBtn').addEventListener('click', () => flyCamera({
+    pos: new THREE.Vector3(0, 30, 40), target: new THREE.Vector3(0, 0, 20.5)
+  }, 1.05));
+  $('#factClose').addEventListener('click', hideFactCard);
+  $('#playAgainBtn').addEventListener('click', () => {
+    closeVictory();
+    resetBoard(true);
+    setHint('A fresh atlas. Drag a state block onto its silhouette.', 'idle');
+  });
+  $('#exploreBtn').addEventListener('click', () => {
+    $('#victory').classList.remove('on');
+    controls.enabled = true;
+    setHint('The completed atlas is yours to explore.', 'good');
+  });
+
+  // Any gesture unlocks the audio context.
+  ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, () => sound.ensure(), { once: true }));
+
+  // Don't let a hidden tab inflate the assembly clock.
+  let hiddenWhileRunning = false;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (game.running) { hiddenWhileRunning = true; pauseTimer(); }
+    } else if (hiddenWhileRunning) {
+      hiddenWhileRunning = false;
+      if (game.started && !game.finished && !$('#welcome').classList.contains('on')) startTimer();
+    }
+  });
+}
+
+function onResize() {
+  if (!renderer || !camera) return;
+  camera.aspect = window.innerWidth / Math.max(1, window.innerHeight);
+  camera.fov = fovForAspect(camera.aspect);
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+}
+
+function updatePointer(e) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointerNdc, camera);
+}
+
+function pickAt(e) {
+  updatePointer(e);
+  const hits = raycaster.intersectObjects(pickables, false);
+  for (const hit of hits) {
+    const ref = hit.object.userData.ref;
+    if (!ref) continue;
+    if (ref.kind === 'state' && ref.state === 'dock') return ref;
+    if (ref.kind === 'pin' && (ref.state === 'dock' || ref.state === 'placed')) return ref;
+  }
+  return null;
+}
+
+function onPointerDown(e) {
+  if (e.button !== 0) return;
+  if (game.finished) return;
+  if ($('#welcome').classList.contains('on')) return;
+  sound.ensure();
+  const ref = pickAt(e);
+  if (!ref) return;
+  if (ref.kind === 'pin' && ref.state !== 'dock') return;
+  e.preventDefault();
+  hideTooltip();
+
+  if (ref.kind === 'state') beginStateDrag(ref, e);
+  else beginPinDrag(ref, e);
+}
+
+function dragPlanePoint(y) {
+  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -y);
+  const out = new THREE.Vector3();
+  if (!raycaster.ray.intersectPlane(plane, out)) return null;
+  out.x = clamp(out.x, -36, 36);
+  out.z = clamp(out.z, -29, 29);
+  return out;
+}
+
+function beginStateDrag(piece, e) {
+  if (!game.started) startTimer();
+  killTag(`pos-${piece.data.id}`);
+  killTag(`scale-${piece.data.id}`);
+  killTag(`yaw-${piece.data.id}`);
+
+  piece.state = 'dragging';
+  piece.fromDock = piece.group.position.clone();
+  piece.fromScale = piece.group.scale.x;
+  const hit = dragPlanePoint(DRAG_Y);
+  if (!hit) return;
+  activeDrag = {
+    kind: 'state', ref: piece,
+    offsetX: piece.group.position.x - hit.x,
+    offsetZ: piece.group.position.z - hit.z,
+    moved: false
+  };
+  controls.enabled = false;
+  renderer.domElement.classList.add('grabbing');
+  if (piece.group.parent !== scene) scene.add(piece.group);
+  // Visually lift and bring to full map scale.
+  animateTag(`pos-${piece.data.id}`, 0.22, (p) => {
+    piece.group.position.y = lerp(piece.group.position.y, DRAG_Y, p);
+  }, easeOutCubic);
+  tweenNumber(`scale-${piece.data.id}`, piece.group.scale.x, 1, 0.24, (v) => piece.group.scale.setScalar(v), easeOutCubic);
+  sound.pickup();
+  setHint('Move the block over its silhouette. Press R or double-click to rotate.', 'idle');
+  updateSlotHighlight(piece);
+}
+
+function beginPinDrag(pin, e) {
+  if (!game.started) startTimer();
+  killTag(`pinpos-${pin.data.id}`);
+  killTag(`pinscale-${pin.data.id}`);
+  pin.state = 'dragging';
+  pin.fromDock = pin.group.position.clone();
+  const hit = dragPlanePoint(PIN_DRAG_Y);
+  if (!hit) return;
+  activeDrag = {
+    kind: 'pin', ref: pin,
+    offsetX: pin.group.position.x - hit.x,
+    offsetZ: pin.group.position.z - hit.z,
+    moved: false
+  };
+  controls.enabled = false;
+  renderer.domElement.classList.add('grabbing');
+  if (pin.group.parent !== scene) scene.add(pin.group);
+  animateTag(`pinpos-${pin.data.id}`, 0.2, (p) => {
+    pin.group.position.y = lerp(pin.group.position.y, PIN_DRAG_Y, p);
+  }, easeOutCubic);
+  tweenNumber(`pinscale-${pin.data.id}`, pin.group.scale.x, 1.06, 0.2, (v) => pin.group.scale.setScalar(v), easeOutCubic);
+  sound.pickup();
+  setHint('Seat the pin in the glowing socket of a placed state. Wrong capitals are rejected.', 'idle');
+}
+
+function onPointerMove(e) {
+  if (activeDrag) {
+    updatePointer(e);
+    const planeY = activeDrag.kind === 'state' ? DRAG_Y : PIN_DRAG_Y;
+    const hit = dragPlanePoint(planeY);
+    if (hit) {
+      const ref = activeDrag.ref;
+      ref.group.position.x = hit.x + activeDrag.offsetX;
+      ref.group.position.z = hit.z + activeDrag.offsetZ;
+      activeDrag.moved = true;
+      if (activeDrag.kind === 'state') updateSlotHighlight(ref);
+      else updatePinHighlight(ref);
+    }
+  } else {
+    const ref = pickAt(e);
+    updateHover(ref, e);
+    if (ref) {
+      const msg = ref.kind === 'state'
+        ? `${ref.data.name} — drag it onto its silhouette.`
+        : ref.state === 'placed'
+          ? `${ref.data.capital} — capital of ${ref.data.name}.`
+          : `${ref.data.capital} — capital pin. Seat it on a placed state.`;
+      setHint(msg, ref.state === 'placed' ? 'good' : 'idle');
+    } else {
+      setHint('Drag a state block from the left tray onto its matching silhouette.', 'idle');
+    }
+  }
+}
+
+function onPointerUp(e) {
+  if (!activeDrag) return;
+  const drag = activeDrag;
+  activeDrag = null;
+  renderer.domElement.classList.remove('grabbing');
+  controls.enabled = true;
+
+  if (drag.kind === 'state') endStateDrag(drag.ref);
+  else endPinDrag(drag.ref);
+}
+
+function pointInRing(x, z, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], zi = ring[i][1];
+    const xj = ring[j][0], zj = ring[j][1];
+    const intersect = ((zi > z) !== (zj > z)) && (x < (xj - xi) * (z - zi) / (zj - zi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function pointInState(st, x, z) {
+  for (const poly of st.polys) if (pointInRing(x, z, poly)) return true;
+  return false;
+}
+
+function findPlacedStateAt(x, z) {
+  for (const p of pieces) {
+    if (p.state === 'placed' && pointInState(p.data, x, z)) return p;
+  }
+  return null;
+}
+
+function endStateDrag(piece) {
+  const st = piece.data;
+  const dx = piece.group.position.x - st.anchor[0];
+  const dz = piece.group.position.z - st.anchor[1];
+  const dist = Math.hypot(dx, dz);
+  const yaw = normalizeAngle(piece.group.rotation.y);
+  const aligned = Math.abs(yaw) < 0.18 || Math.abs(Math.abs(yaw) - Math.PI * 2) < 0.18;
+
+  if (dist < SNAP_RADIUS && aligned) {
+    snapState(piece);
+  } else if (dist < SNAP_RADIUS + 0.7 && !aligned) {
+    setHint('Almost — rotate the block true north with R or a double-click.', 'warn');
+    showToast('That piece is not aligned yet. Rotate it with R or double-click, then drop again.', 'warn');
+    returnToDock(piece);
+  } else {
+    setHint('No slot there. Try dropping the block onto its matching silhouette.', 'idle');
+    returnToDock(piece);
+  }
+  clearHighlights();
+}
+
+function endPinDrag(pin) {
+  const st = pin.data;
+  const px = pin.group.position.x;
+  const pz = pin.group.position.z;
+
+  // Prefer the state under the dropped pin; fall back to the nearest socket.
+  let target = findPlacedStateAt(px, pz);
+  let socketDist = Infinity;
+  let socketState = null;
+  for (const p of pieces) {
+    if (p.state !== 'placed') continue;
+    const d = Math.hypot(px - p.data.capitalPt[0], pz - p.data.capitalPt[1]);
+    if (d < socketDist) { socketDist = d; socketState = p; }
+  }
+  if (!target && socketState && socketDist < PIN_SNAP_RADIUS) target = socketState;
+
+  if (target) {
+    if (target.data.id === st.id) snapPin(pin, target);
+    else rejectPin(pin, target);
+  } else {
+    // Helpful nudge when the pin is over its own (still empty) state slot.
+    const mySlotDist = Math.hypot(px - st.anchor[0], pz - st.anchor[1]);
+    const isPlaced = pieces.find(p => p.data.id === st.id && p.state === 'placed');
+    if (mySlotDist < 4.2 && !isPlaced) {
+      showToast(`Place ${st.name} on the map first — then its capital socket opens.`, 'warn');
+      setHint(`${st.name} must be placed before its capital can be seated.`, 'warn');
+    } else {
+      setHint('No socket there. Capital pins only seat on placed states.', 'idle');
+    }
+    returnPin(pin);
+  }
+  clearPinHighlights();
+}
+
+function returnToDock(piece) {
+  piece.state = 'returning';
+  const id = piece.data.id;
+  const from = piece.group.position.clone();
+  const target = new THREE.Vector3(piece.dock.x, DOCK_Y, piece.dock.z);
+  animateTag(`pos-${id}`, 0.42, (p) => {
+    piece.group.position.x = lerp(from.x, target.x, p);
+    piece.group.position.z = lerp(from.z, target.z, p);
+    piece.group.position.y = lerp(from.y, DOCK_Y, Math.min(1, p * 1.4));
+  }, easeOutCubic, () => {
+    piece.state = 'dock';
+    piece.group.rotation.y = piece.baseYaw;
+  });
+  tweenNumber(`scale-${id}`, piece.group.scale.x, piece.dockScale, 0.40, (v) => piece.group.scale.setScalar(v), easeOutCubic);
+  tweenYaw(`yaw-${id}`, piece.group, piece.baseYaw, 0.34, easeOutCubic);
+}
+
+function returnPin(pin) {
+  pin.state = 'returning';
+  const id = pin.data.id;
+  const from = pin.group.position.clone();
+  const target = new THREE.Vector3(pin.dock.x, 0.20, pin.dock.z);
+  animateTag(`pinpos-${id}`, 0.4, (p) => {
+    pin.group.position.x = lerp(from.x, target.x, p);
+    pin.group.position.z = lerp(from.z, target.z, p);
+    pin.group.position.y = lerp(from.y, target.y, Math.min(1, p * 1.4));
+  }, easeOutCubic, () => { pin.state = 'dock'; });
+  tweenNumber(`pinscale-${id}`, pin.group.scale.x, pin.homeScale, 0.36, (v) => pin.group.scale.setScalar(v), easeOutCubic);
+}
+
+function snapState(piece) {
+  const st = piece.data;
+  const id = st.id;
+  const from = piece.group.position.clone();
+  const target = new THREE.Vector3(st.anchor[0], MAP_Y, st.anchor[1]);
+  piece.state = 'placing';
+  sound.snap();
+  burstAt(st.anchor[0], MAP_Y + 0.20, st.anchor[1], new THREE.Color(st.color), 1.4);
+  tweenYaw(`yaw-${id}`, piece.group, 0, 0.26, easeOutCubic);
+  tweenNumber(`scale-${id}`, piece.group.scale.x, 1, 0.26, (v) => piece.group.scale.setScalar(v), easeOutCubic);
+  animateTag(`pos-${id}`, 0.62, (p, raw) => {
+    piece.group.position.x = lerp(from.x, target.x, easeOutCubic(clamp(raw * 1.8, 0, 1)));
+    piece.group.position.z = lerp(from.z, target.z, easeOutCubic(clamp(raw * 1.8, 0, 1)));
+    piece.group.position.y = lerp(from.y, target.y, easeOutBounce(p));
+  }, (t) => t, () => {
+    piece.state = 'placed';
+    piece.group.position.copy(target);
+    piece.group.rotation.y = 0;
+    piece.group.scale.setScalar(1);
+    game.states++;
+    updateHUD();
+    const vis = slotVisuals.get(id);
+    if (vis) {
+      vis.label.visible = false;
+      vis.fill.material.opacity = 0.27;
+      vis.capDot.material.opacity = 0.95;
+    }
+    sound.chime();
+    if (game.states === TOTAL) {
+      setHint('All thirty states are in place. Now crown them with their capitals.', 'good');
+      showToast('The map is whole. Every capital socket is now live.', 'good');
+    } else {
+      setHint(`${st.name} is seated — its capital socket is live.`, 'good');
+      showToast(`${st.name} placed. ${TOTAL - game.states} states remain.`, 'good');
+    }
+    checkVictory();
+  });
+  // Hide highlight ring during the drop.
+  const vis = slotVisuals.get(id);
+  if (vis) vis.halo.material.opacity = 0;
+}
+
+function snapPin(pin, owner) {
+  const st = pin.data;
+  const id = st.id;
+  const from = pin.group.position.clone();
+  const target = new THREE.Vector3(st.capitalPt[0], SOCKET_Y, st.capitalPt[1]);
+  pin.state = 'placing';
+  pin.socketOwner = owner;
+  sound.snap();
+  burstAt(st.capitalPt[0], SOCKET_Y + 0.1, st.capitalPt[1], new THREE.Color(0xf2cd8c), 1.2);
+
+  let baseScale = 0.8;
+  animateTag(`pinpos-${id}`, 0.5, (p, raw) => {
+    pin.group.position.x = lerp(from.x, target.x, easeOutCubic(clamp(raw * 1.7, 0, 1)));
+    pin.group.position.z = lerp(from.z, target.z, easeOutCubic(clamp(raw * 1.7, 0, 1)));
+    pin.group.position.y = lerp(from.y, target.y, easeOutBounce(p));
+  }, (t) => t, () => {
+    pin.state = 'placed';
+    pin.group.position.copy(target);
+    pin.group.scale.setScalar(baseScale);
+    pin.label.scale.copy(pin.labelBaseScale).multiplyScalar(0.80);
+    pin.label.position.y = 1.0;
+    pin.label.visible = true;
+    pin.label.material.opacity = 1;
+    clearTimeout(pin.labelTimer);
+    pin.labelTimer = setTimeout(() => {
+      animateTag(`pinlabel-${id}`, 0.8, (p) => {
+        pin.label.material.opacity = 1 - p;
+      }, easeOutCubic, () => { if (pin.state === 'placed') pin.label.visible = false; });
+    }, 2200);
+    game.caps++;
+    updateHUD();
+    sound.chime();
+    game.completed.add(st.id);
+    enqueueFact(st);
+    setHint(`${st.capital} is seated in ${st.name}.`, 'good');
+    if (game.caps < TOTAL) showToast(`${st.capital} → ${st.name}. Capital ${game.caps} of ${TOTAL}.`, 'good');
+    checkVictory();
+  });
+  tweenNumber(`pinscale-${id}`, pin.group.scale.x, baseScale, 0.36, (v) => pin.group.scale.setScalar(v), easeOutCubic);
+}
+
+function rejectPin(pin, wrongOwner) {
+  const st = pin.data;
+  const ownerState = wrongOwner.data;
+  pin.state = 'rejecting';
+  sound.buzz();
+  const flash = $('#flash');
+  flash.classList.remove('on');
+  void flash.offsetWidth;
+  flash.classList.add('on');
+  showToast(`Rejected — ${st.capital} is not the capital of ${ownerState.name}.`, 'bad');
+  setHint(`${st.capital} does not belong to ${ownerState.name}. Try another socket.`, 'bad');
+
+  // Flash the wrong socket red.
+  const vis = slotVisuals.get(ownerState.id);
+  const ring = wrongOwner.collar;
+  const oldColor = ring.material.color.getHex();
+  ring.material.color.setHex(0xff5a45);
+  if (vis) vis.capDot.material.color.setHex(0xff5a45);
+  setTimeout(() => {
+    ring.material.color.setHex(oldColor);
+    if (vis) vis.capDot.material.color.setHex(0xe8c384);
+  }, 900);
+
+  const baseX = pin.group.position.x;
+  const baseZ = pin.group.position.z;
+  const seed = Math.random() * 10;
+  animateTag(`pinpos-${st.id}`, 0.5, (p) => {
+    const decay = 1 - p;
+    pin.group.position.x = baseX + Math.sin(p * 46 + seed) * 0.22 * decay;
+    pin.group.position.z = baseZ + Math.cos(p * 38 + seed) * 0.12 * decay;
+    pin.group.position.y = PIN_DRAG_Y + Math.sin(p * Math.PI) * 0.12;
+  }, (t) => t, () => {
+    returnPin(pin);
+  });
+  burstAt(st.capitalPt[0], SOCKET_Y + 0.1, st.capitalPt[1], new THREE.Color(0xff5a45), 0.9);
+}
+
+function onDoubleClick(e) {
+  if (game.finished) return;
+  if (activeDrag && activeDrag.kind === 'state') {
+    rotatePiece(activeDrag.ref);
+    e.preventDefault();
+    return;
+  }
+  const ref = pickAt(e);
+  if (ref && ref.kind === 'state') {
+    rotatePiece(ref);
+    e.preventDefault();
+  }
+}
+
+function rotatePiece(piece) {
+  if (piece.state === 'dragging') {
+    const next = piece.group.rotation.y + Math.PI / 4;
+    tweenYaw(`yaw-${piece.data.id}`, piece.group, next, 0.22, easeOutCubic, () => {
+      if (activeDrag && activeDrag.ref === piece) updateSlotHighlight(piece);
+    });
+    sound.click(0.55);
+    const yaw = normalizeAngle(next);
+    const aligned = Math.abs(yaw) < 0.18;
+    setHint(aligned ? 'Aligned true north — release near the slot to snap.' : 'Keep turning until the silhouette lines up.', aligned ? 'good' : 'warn');
+  } else if (piece.state === 'dock') {
+    piece.baseYaw = piece.group.rotation.y + Math.PI / 4;
+    tweenYaw(`yaw-${piece.data.id}`, piece.group, piece.baseYaw, 0.25, easeOutCubic);
+    sound.click(0.5);
+  }
+}
+
+function onKeyDown(e) {
+  if (e.key === 'r' || e.key === 'R') {
+    const active = activeDrag && activeDrag.kind === 'state' ? activeDrag.ref : null;
+    if (active) {
+      rotatePiece(active);
+      e.preventDefault();
+    }
+  } else if (e.key === 'Escape') {
+    if (activeDrag) {
+      const d = activeDrag;
+      activeDrag = null;
+      controls.enabled = true;
+      renderer.domElement.classList.remove('grabbing');
+      if (d.kind === 'state') returnToDock(d.ref); else returnPin(d.ref);
+      clearHighlights(); clearPinHighlights();
+      setHint('Piece returned to its tray.', 'idle');
+    }
+  } else if (e.key === 'm' || e.key === 'M') {
+    toggleSound();
+  } else if (e.key === 'h' || e.key === 'H') {
+    openWelcome(true);
+  }
+}
+
+function updateHover(ref, e) {
+  setHoverEmissive(ref);
+  renderer.domElement.classList.toggle('pickable', !!ref);
+  if (!ref) { hideTooltip(); return; }
+  const tip = $('#tooltip');
+  if (ref.kind === 'state') {
+    tip.innerHTML = `<b>${ref.data.name}</b><span>State block · drag to its silhouette<br>Press R or double-click to rotate</span>`;
+  } else if (ref.state === 'placed') {
+    tip.innerHTML = `<b>${ref.data.capital}</b><span>Capital of ${ref.data.name}<br>Seated correctly in its socket</span>`;
+  } else {
+    tip.innerHTML = `<b>${ref.data.capital}</b><span>Capital pin · seat it in a placed state's socket</span>`;
+  }
+  tip.style.left = `${Math.min(window.innerWidth - 275, e.clientX + 16)}px`;
+  tip.style.top = `${Math.min(window.innerHeight - 100, e.clientY + 18)}px`;
+  tip.classList.add('on');
+}
+
+function setHoverEmissive(ref) {
+  if (hoveredRef === ref) return;
+  if (hoveredRef) {
+    if (hoveredRef.kind === 'state') hoveredRef.topMat.emissiveIntensity = 0.045;
+    else if (hoveredRef.kind === 'pin') hoveredRef.dome.material.emissiveIntensity = 0.20;
+  }
+  hoveredRef = ref;
+  if (ref) {
+    if (ref.kind === 'state') ref.topMat.emissiveIntensity = 0.28;
+    else if (ref.kind === 'pin') ref.dome.material.emissiveIntensity = 0.68;
+  }
+}
+
+function hideTooltip() {
+  $('#tooltip').classList.remove('on');
+  if (renderer) renderer.domElement.classList.remove('pickable');
+}
+
+function updateSlotHighlight(piece) {
+  clearHighlights();
+  const st = piece.data;
+  const dist = Math.hypot(piece.group.position.x - st.anchor[0], piece.group.position.z - st.anchor[1]);
+  const yaw = normalizeAngle(piece.group.rotation.y);
+  const aligned = Math.abs(yaw) < 0.18;
+  if (dist < SNAP_RADIUS + 1.4) {
+    const vis = slotVisuals.get(st.id);
+    if (!vis) return;
+    vis.halo.material.opacity = 0.9;
+    vis.halo.material.color.setHex(aligned ? 0xf2cd8c : 0xff9b62);
+    vis.halo.userData.active = true;
+    setHint(aligned ? `Release to seat ${st.name}.` : `${st.name} is close — rotate to align.`, aligned ? 'good' : 'warn');
+  }
+}
+
+function clearHighlights() {
+  for (const [, vis] of slotVisuals) {
+    if (vis.halo) {
+      vis.halo.material.opacity = 0;
+      vis.halo.userData.active = false;
+    }
+  }
+}
+
+function updatePinHighlight(pin) {
+  clearPinHighlights();
+  const px = pin.group.position.x;
+  const pz = pin.group.position.z;
+  let nearest = findPlacedStateAt(px, pz);
+  if (!nearest) {
+    let nearestDist = Infinity;
+    for (const p of pieces) {
+      if (p.state !== 'placed') continue;
+      const d = Math.hypot(px - p.data.capitalPt[0], pz - p.data.capitalPt[1]);
+      if (d < nearestDist) { nearestDist = d; nearest = p; }
+    }
+    if (nearestDist >= PIN_SNAP_RADIUS) nearest = null;
+  }
+  if (nearest) {
+    const isCorrect = nearest.data.id === pin.data.id;
+    nearest.collar.material.color.setHex(isCorrect ? 0x9fe0b4 : 0xff5a45);
+    nearest.collar.material.emissiveIntensity = 0.9;
+    nearest.collar.scale.setScalar(1.18);
+    pin.group.userData.targetOwner = nearest;
+    setHint(isCorrect ? `Release to seat ${pin.data.capital}.` : `Wrong state — ${pin.data.capital} doesn't belong here.`, isCorrect ? 'good' : 'bad');
+  }
+}
+
+function clearPinHighlights() {
+  for (const p of pieces) {
+    p.collar.material.color.setHex(0xd6ad6d);
+    p.collar.material.emissiveIntensity = 0.4;
+    p.collar.scale.setScalar(1);
+  }
+}
+
+/* ========================================================================== */
+/*  HUD, timer, facts                                                         */
+/* ========================================================================== */
+
+function updateHUD() {
+  $('#statesCount').textContent = String(game.states);
+  $('#capsCount').textContent = String(game.caps);
+  $('#statesBar').style.width = `${(game.states / TOTAL) * 100}%`;
+  $('#capsBar').style.width = `${(game.caps / TOTAL) * 100}%`;
+  $('#victoryFacts').textContent = String(game.factCount);
+}
+
+function formatTime(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function startTimer() {
+  if (game.finished) return;
+  if (game.running) return;
+  game.started = true;
+  game.running = true;
+  game.startedAt = performance.now() - game.elapsed;
+}
+function pauseTimer() {
+  if (!game.running) return;
+  game.elapsed = performance.now() - game.startedAt;
+  game.running = false;
+}
+function stopTimer() {
+  if (game.running) game.elapsed = performance.now() - game.startedAt;
+  game.running = false;
+}
+function updateTimerUI() {
+  if (game.running) game.elapsed = performance.now() - game.startedAt;
+  $('#timer').textContent = formatTime(game.elapsed);
+}
+
+let factQueue = [];
+let factActive = false;
+let factTimeout = null;
+function enqueueFact(st) {
+  game.factCount++;
+  updateHUD();
+  factQueue.push(st);
+  if (!factActive) showNextFact();
+}
+function showNextFact() {
+  if (!factQueue.length) { factActive = false; return; }
+  factActive = true;
+  const st = factQueue.shift();
+  $('#factState').textContent = st.name;
+  $('#factCapital').textContent = st.capital;
+  $('#factPopulation').textContent = st.population.toLocaleString('en-US');
+  $('#factOrder').textContent = `${ordinal(st.order)} state admitted`;
+  $('#factSeal').textContent = st.id;
+  $('#factSeal').style.background = st.color;
+  $('#factFoot').textContent = `${st.capital} correctly paired with ${st.name}.`;
+  const card = $('#factCard');
+  card.classList.add('on');
+  clearTimeout(factTimeout);
+  factTimeout = setTimeout(() => {
+    card.classList.remove('on');
+    factTimeout = setTimeout(() => {
+      if (factQueue.length) showNextFact();
+      else factActive = false;
+    }, 620);
+  }, 5200);
+}
+function hideFactCard() {
+  $('#factCard').classList.remove('on');
+  clearTimeout(factTimeout);
+  if (factQueue.length) {
+    factTimeout = setTimeout(showNextFact, 500);
+  } else {
+    factActive = false;
+  }
+}
+function ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+let toastTimeout = null;
+function showToast(msg, tone = 'info') {
+  const host = $('#toasts');
+  host.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.dataset.tone = tone;
+  el.innerHTML = `<span class="dot"></span><span>${msg}</span>`;
+  host.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('on'));
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    el.classList.remove('on');
+  }, 3300);
+}
+
+function setHint(msg, tone = 'idle') {
+  const el = $('#hint');
+  el.innerHTML = msg.replace(/\bR\b/g, '<kbd>R</kbd>');
+  el.dataset.tone = tone;
+}
+
+function toggleSound() {
+  sound.ensure();
+  sound.setMuted(!sound.muted);
+  $('#soundOnIcon').style.display = sound.muted ? 'none' : '';
+  $('#soundOffIcon').style.display = sound.muted ? '' : 'none';
+  showToast(sound.muted ? 'Sound muted.' : 'Sound on. Every click is synthesized live.', 'info');
+}
+
+/* ========================================================================== */
+/*  Welcome / help                                                            */
+/* ========================================================================== */
+
+function openWelcome(isHelp) {
+  if (game.finished) return;
+  if (game.started) pauseTimer();
+  const modal = $('#welcome');
+  const title = $('#welcomeTitle');
+  const sub = $('#welcomeSub');
+  const begin = $('#beginBtn');
+  const resume = $('#resumeBtn');
+  if (isHelp && game.started) {
+    title.innerHTML = 'The <em>rules</em><br>of the atlas';
+    sub.textContent = 'A quick refresher before you return. State blocks must be rotated true north, and capitals can only be seated on a state that is already placed.';
+    begin.style.display = 'none';
+    resume.style.display = '';
+  } else {
+    title.innerHTML = 'United<br>States <em>Atlas</em>';
+    sub.textContent = 'Thirty signature states, thirty capital pins, one sculpted tabletop. Rebuild the map, then crown every state with its capital.';
+    begin.style.display = '';
+    resume.style.display = 'none';
+  }
+  modal.classList.add('on');
+}
+function closeWelcome() {
+  $('#welcome').classList.remove('on');
+  if (game.started && !game.finished) startTimer();
+}
+function beginGame() {
+  sound.ensure();
+  $('#welcome').classList.remove('on');
+  if (!game.started) {
+    resetBoard(false);
+    game.elapsed = 0;
+    game.running = false;
+    startTimer();
+    setHint('Drag a state block from the left tray onto its matching silhouette.', 'idle');
+    showToast('The atlas is ready. Begin with any state.', 'info');
+  } else {
+    startTimer();
+  }
+}
+
+/* ========================================================================== */
+/*  Reset / scramble                                                          */
+/* ========================================================================== */
+
+function resetBoard(scramble) {
+  activeDrag = null;
+  controls.enabled = true;
+  renderer.domElement.classList.remove('grabbing');
+  clearHighlights(); clearPinHighlights();
+  hideFactCard();
+  factQueue = [];
+  factActive = false;
+  clearTimeout(factTimeout);
+
+  game.states = 0; game.caps = 0;
+  game.completed.clear();
+  game.factCount = 0;
+  game.finished = false;
+  game.running = false;
+  game.elapsed = 0;
+  game.startedAt = performance.now();
+  victoryOrbit = null;
+  if (victoryParticles) {
+    scene.remove(victoryParticles);
+    victoryParticles.geometry.dispose();
+    victoryParticles.material.dispose();
+    victoryParticles = null;
+  }
+  if (victoryGlow) {
+    scene.remove(victoryGlow);
+    victoryGlow.geometry.dispose();
+    victoryGlow.material.dispose();
+    victoryGlow = null;
+  }
+  if (victoryLight) {
+    scene.remove(victoryLight);
+    victoryLight = null;
+  }
+  $('#victory').classList.remove('on');
+  $('#factCard').classList.remove('on');
+
+  for (const p of pieces) {
+    const id = p.data.id;
+    ['pos', 'scale', 'yaw'].forEach(prefix => killTag(`${prefix}-${id}`));
+    p.state = 'dock';
+    p.group.position.set(p.dock.x, DOCK_Y, p.dock.z);
+    p.baseYaw = (Math.random() < 0.34 ? -Math.PI / 4 : 0);
+    p.group.rotation.y = p.baseYaw;
+    p.dockScale = p.baseDockScale * (p.baseYaw === 0 ? 1 : 0.72);
+    p.group.scale.setScalar(p.dockScale);
+    p.group.visible = true;
+    p.topMat.emissiveIntensity = 0.045;
+    const vis = slotVisuals.get(id);
+    if (vis) {
+      vis.label.visible = true;
+      vis.fill.material.opacity = vis.defaultFill;
+      vis.capDot.material.opacity = 0.46;
+      vis.capDot.material.color.setHex(0xe8c384);
+    }
+    p.collar.material.color.setHex(0xd6ad6d);
+    p.collar.material.emissiveIntensity = 0.4;
+  }
+  for (const p of pins) {
+    const id = p.data.id;
+    killTag(`pinpos-${id}`); killTag(`pinscale-${id}`); killTag(`pinlabel-${id}`);
+    clearTimeout(p.labelTimer);
+    p.state = 'dock';
+    p.socketOwner = null;
+    p.group.position.set(p.dock.x, 0.20, p.dock.z);
+    p.group.scale.setScalar(p.homeScale);
+    p.group.visible = true;
+    clearTimeout(p.labelTimer);
+    p.label.scale.copy(p.labelBaseScale);
+    p.label.position.y = 1.08;
+    p.label.visible = true;
+    p.label.material.opacity = 1;
+  }
+  updateHUD();
+  updateTimerUI();
+  if (scramble) {
+    if (!game.started) {
+      game.started = true;
+    }
+    startTimer();
+  }
+}
+
+/* ========================================================================== */
+/*  Victory                                                                   */
+/* ========================================================================== */
+
+function checkVictory() {
+  if (game.finished) return;
+  if (game.states === TOTAL && game.caps === TOTAL) triggerVictory();
+}
+
+function triggerVictory() {
+  game.finished = true;
+  stopTimer();
+  updateTimerUI();
+  sound.victory();
+  $('#victoryTime').textContent = formatTime(game.elapsed);
+  $('#victoryFacts').textContent = String(game.factCount);
+  factQueue = [];
+  factActive = false;
+  clearTimeout(factTimeout);
+  $('#factCard').classList.remove('on');
+  hideTooltip();
+  setHint('Every state and capital is in place. The atlas is complete.', 'good');
+
+  for (const p of pieces) p.topMat.emissiveIntensity = 0.36;
+  createVictoryParticles();
+
+  const startAngle = Math.atan2(camera.position.z, camera.position.x);
+  victoryOrbit = {
+    start: performance.now(),
+    duration: 9000,
+    startAngle,
+    radius: 36,
+    height: 26
+  };
+  controls.enabled = false;
+
+  const revealDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1200 : 7600;
+  setTimeout(() => {
+    if (game.finished) $('#victory').classList.add('on');
+  }, revealDelay);
+}
+
+function createVictoryParticles() {
+  if (victoryParticles) return;
+  const count = 520;
+  const positions = new Float32Array(count * 3);
+  const velocities = [];
+  const colors = new Float32Array(count * 3);
+  const palette = [new THREE.Color(0xffd88a), new THREE.Color(0xffefc2), new THREE.Color(0x9fe0b4), new THREE.Color(0xffab6e), new THREE.Color(0x8fd4cf)];
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = Math.random() * 18;
+    positions[i * 3] = Math.cos(a) * r;
+    positions[i * 3 + 1] = 2 + Math.random() * 18;
+    positions[i * 3 + 2] = Math.sin(a) * r * 0.62;
+    velocities.push({
+      x: (Math.random() - 0.5) * 0.35,
+      y: 0.5 + Math.random() * 1.4,
+      z: (Math.random() - 0.5) * 0.35,
+      sway: Math.random() * Math.PI * 2
+    });
+    const c = palette[i % palette.length];
+    colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.26, map: createGlowTexture(), transparent: true, opacity: 0.92,
+    depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: true,
+    sizeAttenuation: true
+  });
+  victoryParticles = new THREE.Points(geo, mat);
+  victoryParticles.userData.velocities = velocities;
+  scene.add(victoryParticles);
+
+  if (!victoryGlow) {
+    victoryGlow = new THREE.Mesh(
+      new THREE.PlaneGeometry(43, 27),
+      new THREE.MeshBasicMaterial({
+        map: createGlowTexture(), color: 0xffc074, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      })
+    );
+    victoryGlow.rotation.x = -Math.PI / 2;
+    victoryGlow.position.set(0, 0.42, 0);
+    victoryGlow.renderOrder = 9;
+    scene.add(victoryGlow);
+    animateTag('victory-glow', 2.4, (p) => { victoryGlow.material.opacity = 0.19 * p; }, easeOutCubic);
+    victoryLight = new THREE.PointLight(0xffc478, 70, 46, 2);
+    victoryLight.position.set(0, 11, 0);
+    scene.add(victoryLight);
+  }
+}
+
+function closeVictory() {
+  $('#victory').classList.remove('on');
+}
+
+/* ========================================================================== */
+/*  Camera flights                                                            */
+/* ========================================================================== */
+
+function flyCamera(pose, duration) {
+  killTag('camera-pos');
+  killTag('camera-target');
+  const p0 = camera.position.clone();
+  const t0 = controls.target.clone();
+  controls.enabled = false;
+  animateTag('camera-pos', duration, (p) => {
+    camera.position.x = lerp(p0.x, pose.pos.x, p);
+    camera.position.y = lerp(p0.y, pose.pos.y, p);
+    camera.position.z = lerp(p0.z, pose.pos.z, p);
+  }, easeInOutCubic, () => { controls.enabled = !game.finished; });
+  animateTag('camera-target', duration, (p) => {
+    controls.target.x = lerp(t0.x, pose.target.x, p);
+    controls.target.y = lerp(t0.y, pose.target.y, p);
+    controls.target.z = lerp(t0.z, pose.target.z, p);
+    camera.lookAt(controls.target);
+  }, easeInOutCubic);
+}
+
+/* ========================================================================== */
+/*  Effects                                                                   */
+/* ========================================================================== */
+
+function burstAt(x, y, z, color, scale = 1) {
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.28, 0.36, 36),
+    new THREE.MeshBasicMaterial({
+      color, transparent: true, opacity: 0.85, side: THREE.DoubleSide,
+      depthWrite: false, blending: THREE.AdditiveBlending
+    })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(x, y, z);
+  scene.add(ring);
+  animateTag(`burst-${Math.random()}`, 0.75, (p) => {
+    ring.scale.setScalar(1 + p * 3.4 * scale);
+    ring.material.opacity = 0.85 * (1 - p);
+  }, easeOutCubic, () => {
+    scene.remove(ring);
+    ring.geometry.dispose();
+    ring.material.dispose();
+  });
+}
+
+/* ========================================================================== */
+/*  Ambient animation                                                         */
+/* ========================================================================== */
+
+let lastTime = performance.now();
+let hudTick = 0;
+
+function animate(now) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+  const t = now / 1000;
+
+  updateTweens(dt);
+  controls.update();
+
+  // Slot halo pulse
+  for (const [, vis] of slotVisuals) {
+    if (vis.halo && vis.halo.userData.active) {
+      const s = 1 + Math.sin(t * 5.2) * 0.07;
+      vis.halo.scale.setScalar(s);
+      vis.halo.material.opacity = 0.72 + Math.sin(t * 5.2) * 0.16;
+    }
+  }
+
+  // Subtle brass pulse on sockets.
+  for (const p of pieces) {
+    if (p.state === 'placed') {
+      const s = 1 + Math.sin(t * 2.2 + p.data.order) * 0.035;
+      p.collar.scale.setScalar(s);
+      if (!activeDrag) p.collar.material.emissiveIntensity = 0.4 + Math.sin(t * 2.2 + p.data.order) * 0.12;
+    }
+  }
+
+  // Idle state labels breathe a little.
+  for (const p of pieces) {
+    if (p.state === 'dock') {
+      p.topMat.emissiveIntensity = 0.045 + Math.sin(t * 1.8 + p.data.order) * 0.01;
+    }
+  }
+
+  // Dust drift.
+  if (dust) {
+    const arr = dust.geometry.attributes.position.array;
+    const seeds = dust.userData.seed;
+    for (let i = 0; i < seeds.length; i++) {
+      arr[i * 3 + 1] += dt * (0.18 + (i % 5) * 0.025);
+      arr[i * 3] += Math.sin(t * 0.25 + seeds[i]) * dt * 0.06;
+      if (arr[i * 3 + 1] > 33) arr[i * 3 + 1] = 1.5;
+    }
+    dust.geometry.attributes.position.needsUpdate = true;
+    dust.material.opacity = 0.34 + Math.sin(t * 0.5) * 0.06;
+  }
+
+  // Victory particles & orbit.
+  if (victoryParticles) {
+    const arr = victoryParticles.geometry.attributes.position.array;
+    const vels = victoryParticles.userData.velocities;
+    for (let i = 0; i < vels.length; i++) {
+      arr[i * 3] += (vels[i].x + Math.sin(t * 1.2 + vels[i].sway) * 0.15) * dt;
+      arr[i * 3 + 1] += vels[i].y * dt;
+      arr[i * 3 + 2] += (vels[i].z + Math.cos(t * 1.1 + vels[i].sway) * 0.15) * dt;
+      if (arr[i * 3 + 1] > 30) {
+        const a = Math.random() * Math.PI * 2, r = Math.random() * 18;
+        arr[i * 3] = Math.cos(a) * r;
+        arr[i * 3 + 1] = 1.2;
+        arr[i * 3 + 2] = Math.sin(a) * r * 0.62;
+      }
+    }
+    victoryParticles.geometry.attributes.position.needsUpdate = true;
+    victoryParticles.material.opacity = 0.8 + Math.sin(t * 2.1) * 0.12;
+  }
+  if (victoryGlow) {
+    victoryGlow.material.opacity = 0.15 + Math.sin(t * 1.6) * 0.045;
+  }
+  if (victoryLight) {
+    victoryLight.intensity = 62 + Math.sin(t * 1.8) * 14;
+  }
+
+  if (victoryOrbit) {
+    const p = clamp((now - victoryOrbit.start) / victoryOrbit.duration, 0, 1);
+    const eased = easeInOutCubic(p);
+    const angle = victoryOrbit.startAngle + eased * Math.PI * 2;
+    const radius = lerp(48, victoryOrbit.radius, Math.min(1, eased * 2.4));
+    camera.position.x = Math.cos(angle) * radius;
+    camera.position.z = Math.sin(angle) * radius;
+    camera.position.y = victoryOrbit.height + Math.sin(eased * Math.PI) * 3.5;
+    controls.target.set(0, 0.5, 0);
+    camera.lookAt(controls.target);
+    if (p >= 1) {
+      victoryOrbit = null;
+      controls.target.set(0, 0.5, 0);
+      controls.enabled = true;
+    }
+  }
+
+  // Keep the timer honest without touching the DOM every frame.
+  hudTick += dt;
+  if (hudTick > 0.2) {
+    hudTick = 0;
+    updateTimerUI();
+  }
+
+  renderer.render(scene, camera);
+}
+
+/* ========================================================================== */
+/*  Debug / automation helper (harmless read-only projection utilities)       */
+/* ========================================================================== */
+
+window.__ATLAS__ = {
+  get game() { return { ...game, completed: Array.from(game.completed) }; },
+  get pieces() { return pieces.map(p => ({ id: p.data.id, name: p.data.name, state: p.state, yaw: p.group.rotation.y, scale: p.group.scale.x })); },
+  get pins() { return pins.map(p => ({ id: p.data.id, capital: p.data.capital, state: p.state })); },
+  screenState(id) {
+    const p = pieces.find(x => x.data.id === id);
+    if (!p) return null;
+    const v = new THREE.Vector3();
+    p.group.getWorldPosition(v);
+    v.y = 1.0;
+    v.project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  },
+  screenSlot(id) {
+    const st = STATES.find(x => x.id === id);
+    if (!st) return null;
+    const v = new THREE.Vector3(st.anchor[0], 0.4, st.anchor[1]).project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  },
+  screenPin(id) {
+    const p = pins.find(x => x.data.id === id);
+    if (!p) return null;
+    const v = new THREE.Vector3();
+    p.group.getWorldPosition(v);
+    v.y += 0.8;
+    v.project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  },
+  screenSocket(stateId) {
+    const st = STATES.find(x => x.id === stateId);
+    if (!st) return null;
+    const v = new THREE.Vector3(st.capitalPt[0], SOCKET_Y, st.capitalPt[1]).project(camera);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  }
+};
+
+if (new URLSearchParams(location.search).has('test')) {
+  window.__ATLAS__.place = (id) => {
+    const p = pieces.find(x => x.data.id === id);
+    if (!p || p.state === 'placed') return false;
+    p.state = 'dragging';
+    p.group.position.set(p.data.anchor[0], DRAG_Y, p.data.anchor[1]);
+    p.group.rotation.y = 0;
+    p.group.scale.setScalar(1);
+    snapState(p);
+    return true;
+  };
+  window.__ATLAS__.crown = (id) => {
+    const pin = pins.find(x => x.data.id === id);
+    const owner = pieces.find(x => x.data.id === id);
+    if (!pin || !owner || owner.state !== 'placed' || pin.state !== 'dock') return false;
+    pin.state = 'dragging';
+    pin.group.position.set(owner.data.capitalPt[0], PIN_DRAG_Y, owner.data.capitalPt[1]);
+    pin.group.scale.setScalar(1);
+    snapPin(pin, owner);
+    return true;
+  };
+  window.__ATLAS__.solve = () => {
+    STATES.forEach((st, i) => setTimeout(() => window.__ATLAS__.place(st.id), i * 90));
+    STATES.forEach((st, i) => setTimeout(() => window.__ATLAS__.crown(st.id), 1400 + i * 110));
+  };
+}
+
+/* ========================================================================== */
+/*  Boot                                                                      */
+/* ========================================================================== */
+
+try {
+  init();
+  updateHUD();
+} catch (err) {
+  console.error(err);
+  const loader = $('#loader');
+  if (loader) {
+    loader.classList.remove('hide');
+    loader.innerHTML = '<div class="loader-inner"><div class="loader-title">The table could not be prepared</div><div class="loader-sub" style="text-transform:none;letter-spacing:.05em;max-width:420px;line-height:1.7">This browser may not support WebGL, or the Three.js CDN was blocked. Please try a modern browser with hardware acceleration enabled.</div></div>';
+  }
+}
+</script>
+</body>
+</html>
