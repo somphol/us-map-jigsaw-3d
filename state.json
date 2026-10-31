@@ -1,21 +1,21 @@
 {
   "project": "us-map-jigsaw-3d",
-  "description": "An interactive 3D United States map & capitals jigsaw in one self-contained HTML file, built with Three.js.",
+  "description": "An interactive 3D United States map & capitals jigsaw with all fifty states and capitals in one self-contained HTML file, built with Three.js.",
   "build": {
     "startedAt": "2026-10-31T18:24:10.762000Z",
-    "completedAt": "2026-10-31T18:54:34.648541Z",
-    "durationSeconds": 1823.9,
-    "durationHuman": "30m 24s",
+    "completedAt": "2026-10-31T19:38:36.623051Z",
+    "durationSeconds": 4465.9,
+    "durationHuman": "1h 14m 26s",
     "timezone": "UTC"
   },
   "tokens": {
-    "input": 415042,
-    "output": 79895,
-    "reasoning": 94812,
-    "cacheRead": 17169920,
+    "input": 589096,
+    "output": 122782,
+    "reasoning": 172829,
+    "cacheRead": 53404800,
     "cacheWrite": 1172,
-    "total": 589749,
-    "totalWithCache": 17760841,
+    "total": 884707,
+    "totalWithCache": 54290679,
     "note": "Snapshot from the OpenCode session record when the project was packaged. total = input + output + reasoning. Cache reads/writes are reported separately because they are a subset of context usage."
   },
   "cost": {
@@ -35,12 +35,16 @@
   "repository": "https://github.com/somphol/us-map-jigsaw-3d",
   "pages": "https://somphol.github.io/us-map-jigsaw-3d/",
   "game": {
-    "playableStates": 30,
-    "playableCapitals": 30,
-    "contiguousOutlines": 48,
+    "playableStates": 50,
+    "playableCapitals": 50,
+    "contiguousStates": 48,
+    "insetStates": [
+      "Alaska",
+      "Hawaii"
+    ],
     "singleFile": "index.html",
-    "htmlBytes": 133978,
-    "htmlLines": 3143
+    "htmlBytes": 146664,
+    "htmlLines": 3309
   },
   "artifacts": [
     "index.html",
@@ -50,6 +54,7 @@
     "screenshot.png",
     "screenshot-menu.png",
     "screenshot-rotate.png",
+    "screenshot-complete.png",
     "screenshot-victory.png",
     "assets/mapdata.js",
     "tools/generate_map_data.py",

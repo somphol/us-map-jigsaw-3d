@@ -1,6 +1,6 @@
 # United States Atlas
 
-A complete, interactive **3D United States Map & Capitals jigsaw** in **one self-contained HTML file**. Thirty signature state blocks are scattered across a mahogany studio table; drag them onto their silhouettes, turn them true north, then crown each state with its brass capital pin.
+A complete, interactive **3D United States Map & Capitals jigsaw** in **one self-contained HTML file**. Fifty state blocks are scattered across a mahogany studio table; drag them onto their silhouettes, turn them true north, then crown each state with its brass capital pin.
 
 ![United States Atlas gameplay](screenshot.png)
 
@@ -39,16 +39,16 @@ When a state and its capital are both placed, a fact card appears with the capit
 | `Esc` | Return the held piece to its tray |
 | `M` | Mute / unmute synthesized audio |
 | `H` | Open the rules |
-| Overview / Map / State tray / Capitals | Fly the camera to a useful view |
+| Overview / Map / State tray / Capitals / Pacific | Fly the camera to a useful view |
 | Scramble | Reset the board and timer |
 
 On touch screens, use the same drag-and-drop gestures; the view buttons along the bottom left jump between the map and the two trays.
 
 ## Features
 
-- **Dual-layer jigsaw** — 30 extruded state blocks with capital sockets, plus 30 individually labeled brass capital pins.
+- **Dual-layer jigsaw** — all 50 extruded state blocks with capital sockets, plus 50 individually labeled brass capital pins.
 - **Sculpted tabletop scene** — procedurally generated mahogany, felt inlays, a semi-transparent recessed map plate, engraved labels, compass rose, soft shadows, dust motes, and a warm studio spotlight.
-- **All 48 contiguous states on the board** — the eighteen states outside the playable set are rendered as muted inlays, so the finished map reads as a whole country.
+- **All 50 states on the board** — the 48 contiguous states share the main recessed baseplate, while Alaska and Hawaii sit on a separate Pacific inset plaque, so the finished atlas is complete.
 - **Raycast drag-and-drop** — generous invisible pick targets, smooth lift, snap highlighting, and spring drop animations.
 - **Discoverable rotation** — a floating **Rotate 45°** control appears while dragging, alongside `R` and double-click rotation, with an orange “rotate to align” halo when a piece is close but twisted.
 - **Dual-snap validation** — state blocks must align both position and rotation; capital pins validate against the state beneath them, not just a socket radius.
@@ -58,31 +58,46 @@ On touch screens, use the same drag-and-drop gestures; the view buttons along th
 - **Educational fact cards** — capital city, estimated population, and statehood order for every completed pairing.
 - **Victory sequence** — a 360° camera orbit around the glowing assembled map, golden particles, a warm map glow, and a results card with assembly time.
 - **Responsive** — desktop-first layout with a portrait camera fit and touch-friendly view controls.
+- **Full fifty-state finish** — every state and every capital, including the Alaska and Hawaii insets, assembled on one tabletop.
 
 ## The playable states
 
-<details>
-<summary>30 states and their capitals</summary>
+<details open>
+<summary>All 50 states and their capitals</summary>
 
 | State | Capital | State | Capital |
 | --- | --- | --- | --- |
-| California | Sacramento | Texas | Austin |
-| Florida | Tallahassee | New York | Albany |
-| Illinois | Springfield | Pennsylvania | Harrisburg |
-| Ohio | Columbus | Michigan | Lansing |
-| Georgia | Atlanta | North Carolina | Raleigh |
-| Washington | Olympia | Arizona | Phoenix |
-| Colorado | Denver | Montana | Helena |
-| Minnesota | Saint Paul | Missouri | Jefferson City |
-| Tennessee | Nashville | Virginia | Richmond |
-| Oregon | Salem | Utah | Salt Lake City |
-| Nevada | Carson City | Louisiana | Baton Rouge |
-| Alabama | Montgomery | Kentucky | Frankfort |
-| Maine | Augusta | New Mexico | Santa Fe |
-| South Carolina | Columbia | Iowa | Des Moines |
-| Arkansas | Little Rock | Kansas | Topeka |
+| Alabama | Montgomery | Alaska | Juneau |
+| Arizona | Phoenix | Arkansas | Little Rock |
+| California | Sacramento | Colorado | Denver |
+| Connecticut | Hartford | Delaware | Dover |
+| Florida | Tallahassee | Georgia | Atlanta |
+| Hawaii | Honolulu | Idaho | Boise |
+| Illinois | Springfield | Indiana | Indianapolis |
+| Iowa | Des Moines | Kansas | Topeka |
+| Kentucky | Frankfort | Louisiana | Baton Rouge |
+| Maine | Augusta | Maryland | Annapolis |
+| Massachusetts | Boston | Michigan | Lansing |
+| Minnesota | Saint Paul | Mississippi | Jackson |
+| Missouri | Jefferson City | Montana | Helena |
+| Nebraska | Lincoln | Nevada | Carson City |
+| New Hampshire | Concord | New Jersey | Trenton |
+| New Mexico | Santa Fe | New York | Albany |
+| North Carolina | Raleigh | North Dakota | Bismarck |
+| Ohio | Columbus | Oklahoma | Oklahoma City |
+| Oregon | Salem | Pennsylvania | Harrisburg |
+| Rhode Island | Providence | South Carolina | Columbia |
+| South Dakota | Pierre | Tennessee | Nashville |
+| Texas | Austin | Utah | Salt Lake City |
+| Vermont | Montpelier | Virginia | Richmond |
+| Washington | Olympia | West Virginia | Charleston |
+| Wisconsin | Madison | Wyoming | Cheyenne |
 
 </details>
+
+Alaska and Hawaii are seated on the small Pacific inset plaque to the right of the main map; the other 48 states fill the contiguous baseplate.
+
+![All fifty states assembled](screenshot-complete.png)
 
 ## Project structure
 
@@ -93,6 +108,7 @@ tools/generate_map_data.py    # regenerates assets/mapdata.js from public-domain
 screenshot.png                # gameplay
 screenshot-menu.png           # title / rules screen
 screenshot-rotate.png         # rotate control while dragging
+screenshot-complete.png       # all fifty states assembled
 screenshot-victory.png        # victory sequence
 STATE.md                      # build telemetry: time and tokens
 state.json                    # machine-readable build telemetry
@@ -113,7 +129,7 @@ python3 tools/build.py
 ## Technical notes
 
 - **Engine:** Three.js r160 via ES-module CDN and `OrbitControls`.
-- **Geometry:** US Census-derived state boundaries, projected with an Albers conic projection, normalized to game units, and simplified with Douglas–Peucker. States with multiple landmasses (for example Michigan) keep their largest polygons.
+- **Geometry:** US Census-derived state boundaries. The 48 contiguous states use an Albers conic projection, normalized to game units and simplified with Douglas–Peucker; Alaska and Hawaii use local inset projections on the Pacific plaque. States with multiple landmasses (for example Michigan and Hawaii) keep their significant islands.
 - **Rendering:** PCF soft shadows, ACES filmic tone mapping, procedural canvas textures, additive particles, and `MeshStandardMaterial`/`MeshPhysicalMaterial` throughout.
 - **Interaction:** a single `Raycaster`, invisible per-polygon pick proxies, a horizontal drag plane, tag-based tween manager, and state-machine flags for dock / dragging / placing / placed / returning.
 - **Validation:** orientation-aware state snapping and point-in-polygon capital validation against placed state geometry.

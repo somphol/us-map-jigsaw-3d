@@ -4,8 +4,8 @@
 | --- | --- |
 | Project | United States Atlas (`us-map-jigsaw-3d`) |
 | Started | 2026-10-31 18:24:10 UTC |
-| Completed | 2026-10-31 18:54:34 UTC |
-| Duration | **30m 24s** (1823.9 seconds) |
+| Completed | 2026-10-31 19:38:36 UTC |
+| Duration | **1h 14m 26s** (4465.9 seconds) |
 | Harness | OpenCode 2.2.5 |
 | Model | DeepSeek V4.1 Flash (`opencode-go/deepseek-v4.1-flash`) |
 | Session | `ses_e6ccb8c03ffepuWoju93Bqua9y` |
@@ -16,25 +16,26 @@
 
 | Metric | Tokens |
 | --- | ---: |
-| Input | 415,042 |
-| Output | 79,895 |
-| Reasoning | 94,812 |
-| **Total (input + output + reasoning)** | **589,749** |
-| Cache read | 17,169,920 |
+| Input | 589,096 |
+| Output | 122,782 |
+| Reasoning | 172,829 |
+| **Total (input + output + reasoning)** | **884,707** |
+| Cache read | 53,404,800 |
 | Cache write | 1,172 |
-| Total including cache | 17,760,841 |
+| Total including cache | 54,290,679 |
 
-> Snapshot taken from the OpenCode session record when the project was packaged at 2026-10-31 18:54:34 UTC. The final commit/push commands and the closing response occur outside this snapshot, so the live session totals will be marginally higher.
+> Snapshot taken from the OpenCode session record when the project was packaged at 2026-10-31 19:38:36 UTC. The final commit/push commands and the closing response occur outside this snapshot, so the live session totals will be marginally higher.
 
 ## What was built
 
-- One self-contained `index.html`: **133,978 bytes, 3,143 lines**.
-- 30 playable extruded state blocks with capital sockets, and 30 labeled 3D capital pins.
-- Discoverable on-screen **Rotate 45°** control while dragging, alongside `R` and double-click rotation.
-- All 48 contiguous state outlines on the baseplate, with 18 non-playable states rendered as muted inlays.
+- One self-contained `index.html`: **146,664 bytes, 3,309 lines**.
+- **All 50 states**: 48 contiguous extruded blocks on the main recessed baseplate, plus Alaska and Hawaii on a separate Pacific inset plaque.
+- **All 50 capitals** as labeled 3D pins in a 10 × 5 brass tray.
 - Raycast drag-and-drop, 45° rotation, dual-snap validation with rotation checks, wrong-capital rejection, Web Audio synthesis, fact cards, live timer, scramble/reset, and a 360° victory orbit with particles.
-- Procedural mahogany/felt textures, semi-transparent recessed map plate, soft shadows, compass rose, and a responsive glass HUD.
-- Separately reproducible map build pipeline in `tools/` and four rendered screenshots.
+- A floating **Rotate 45°** control appears while dragging, alongside `R` and double-click rotation.
+- Procedural mahogany/felt textures, semi-transparent recessed map plate, soft shadows, compass rose, Pacific inset, and a responsive glass HUD.
+- Custom view buttons for Overview, Map, State tray, Capitals, and Pacific.
+- Reproducible fifty-state geometry pipeline in `tools/`, and five rendered screenshots.
 
 ## Credits
 
