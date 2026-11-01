@@ -1,10 +1,21 @@
+<div align="center">
+
+<img src="docs/social-card.png" alt="United States Atlas — 3D Map & Capitals Jigsaw" width="100%" />
+
 # United States Atlas
 
-A complete, interactive **3D United States Map & Capitals jigsaw** in **one self-contained HTML file**. Fifty state blocks are scattered across a mahogany studio table; drag them onto their silhouettes, turn them true north, then crown each state with its brass capital pin.
+**3D Map & Capitals Jigsaw**
 
-![United States Atlas gameplay](screenshot.png)
+Fifty state blocks, fifty brass capital pins, and a mahogany studio table — a complete interactive geography puzzle.
 
-**Live demo:** <https://somphol.github.io/us-map-jigsaw-3d/>
+[![Live demo](https://img.shields.io/badge/live_demo-online-d4a373?style=flat-square)](https://somphol.github.io/us-map-jigsaw-3d/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-d4a373?style=flat-square)](LICENSE)
+
+**[Try it live →](https://somphol.github.io/us-map-jigsaw-3d/)**
+
+</div>
+
+---
 
 ## Play
 
