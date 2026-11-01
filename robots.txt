@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://somphol.github.io/us-map-jigsaw-3d/sitemap.xml
