@@ -131,6 +131,14 @@ Click any placed state to inspect its total area, population, density, and neigh
 index.html                    # the complete game; open this file
 assets/mapdata.js             # projected/simplified state geometry (build artifact)
 tools/generate_map_data.py    # regenerates assets/mapdata.js from public-domain boundaries
+tools/build.py                # inlines mapdata.js into index.html
+AGENTS.md                     # maintainer handoff
+CHANGELOG.md                  # change history
+docs/ARCHITECTURE.md          # data pipeline, scene, interaction, change guide
+docs/REPRODUCTION.md          # rebuild and acceptance checks
+docs/DEPLOYMENT.md            # Pages hosting, CDN dependency, rollback
+docs/TESTING.md               # evidence, headless solve, manual matrix
+docs/social-card.png          # 1200 × 630 link preview
 screenshot.png                # gameplay
 screenshot-menu.png           # title / rules screen
 screenshot-rotate.png         # rotate control while dragging
@@ -190,10 +198,15 @@ documentation fixes alike. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and th
 | Document | Purpose |
 | --- | --- |
 | [README.md](README.md) | Overview, setup, controls, and architecture |
+| [AGENTS.md](AGENTS.md) | Handoff for the next maintainer or agent |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | File map, data pipeline, state machines, snapping, HUD |
+| [docs/REPRODUCTION.md](docs/REPRODUCTION.md) | How to rebuild the project from scratch |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Pages hosting, CDN dependency, rollback |
+| [docs/TESTING.md](docs/TESTING.md) | Evidence, headless solve, manual test matrix |
 | [CHANGELOG.md](CHANGELOG.md) | Notable changes and release history |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Local workflow, constraints, and pull request checks |
 | [SECURITY.md](SECURITY.md) | Supported versions and private vulnerability reporting |
-| [STATE.md](STATE.md) | Build timing, verification record, and token usage |
+| [STATE.md](STATE.md) | Build timing and token usage |
 | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Library, font, and asset attribution |
 | [LICENSE](LICENSE) | MIT licence |
 
